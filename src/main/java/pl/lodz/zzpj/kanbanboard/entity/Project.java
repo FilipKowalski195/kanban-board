@@ -1,26 +1,33 @@
-package pl.lodz.zzpj.kanbanboard.core.domain;
+package pl.lodz.zzpj.kanbanboard.entity;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.*;
 
-@ToString
+@Entity
+@Table(name = "projects")
 public class Project extends Base {
 
-    @Getter
-    @Setter
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @NotBlank
+    @Column(nullable = false)
     private String name;
 
-    @Getter
-    @Setter
+    @ManyToOne(optional = false)
     private User leader;
 
-    private final Set<User> members;
+    @ManyToMany()
+    private Set<User> members;
 
-    private final List<Task> tasks;
+    @OneToMany
+    private List<Task> tasks;
+
+    public Project() {
+    }
 
     public Project(UUID uuid, Instant createdAt, User leader) {
         super(uuid, createdAt);
@@ -46,5 +53,25 @@ public class Project extends Base {
 
     public void addTask(Task task) {
         tasks.add(task);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public User getLeader() {
+        return leader;
+    }
+
+    public Set<User> getMembers() {
+        return members;
+    }
+
+    public List<Task> getTasks() {
+        return tasks;
     }
 }
