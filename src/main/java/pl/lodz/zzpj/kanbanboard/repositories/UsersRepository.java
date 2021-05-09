@@ -7,4 +7,5 @@ import pl.lodz.zzpj.kanbanboard.entity.User;
 @Repository
 public interface UsersRepository extends JpaRepository<User, Long> {
     public User findUserByEmail(String email);
+    public boolean existsUserByEmail(String email);
 }
