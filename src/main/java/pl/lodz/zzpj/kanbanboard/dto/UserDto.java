@@ -1,11 +1,11 @@
-package pl.lodz.zzpj.kanbanboard.DTO;
+package pl.lodz.zzpj.kanbanboard.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class DTOUser {
+public class UserDto {
 
     private String email;
 

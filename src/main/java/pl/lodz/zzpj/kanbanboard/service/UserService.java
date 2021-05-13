@@ -3,44 +3,42 @@ package pl.lodz.zzpj.kanbanboard.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.lodz.zzpj.kanbanboard.entity.User;
-import pl.lodz.zzpj.kanbanboard.repositories.UsersRepository;
-import pl.lodz.zzpj.kanbanboard.DTO.DTOUser;
+import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
+import pl.lodz.zzpj.kanbanboard.dto.UserDto;
+import pl.lodz.zzpj.kanbanboard.service.converter.UserConverter;
+import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class UserService {
 
-    UsersRepository usersRepository;
+    private final UsersRepository usersRepository;
+
+    private final DateProvider dateProvider;
 
     @Autowired
-    public UserService(UsersRepository usersRepository) {
+    public UserService(UsersRepository usersRepository, DateProvider dateProvider) {
         this.usersRepository = usersRepository;
+        this.dateProvider = dateProvider;
     }
 
     public User getUserByEmail(String email) {
-        return usersRepository.findUserByEmail(email);
+        return usersRepository.findUserByEmail(email).orElseThrow();
     }
 
     public List<User> getAllUsers(){
         return usersRepository.findAll();
     }
 
-    public void addUser(String email, String firstName, String lastName, String password) {
-        if(usersRepository.existsUserByEmail(email)) {
+    public void addUser(UserDto userDto) {
+        if(usersRepository.existsUserByEmail(userDto.getEmail())) {
             return;
         }
-        Instant now = Instant.now();
-        usersRepository.save(new User(UUID.randomUUID(), now, email, firstName, lastName, password));
-    }
 
-    public void addUser(DTOUser user) {
-        if(usersRepository.existsUserByEmail(user.getEmail())) {
-            return;
-        }
-        Instant now = Instant.now();
-        usersRepository.save(new User(UUID.randomUUID(), now, user.getEmail(), user.getFirstName(), user.getLastName(), user.getPassword()));
+        var user = UserConverter.toDomain(userDto, UUID.randomUUID(), dateProvider.now());
+
+        usersRepository.save(user);
     }
 }
