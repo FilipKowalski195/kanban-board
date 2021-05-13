@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 import pl.lodz.zzpj.kanbanboard.repositories.UsersRepository;
-import pl.lodz.zzpj.kanbanboard.restModel.RESTUser;
+import pl.lodz.zzpj.kanbanboard.DTO.DTOUser;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,7 +36,7 @@ public class UserService {
         usersRepository.save(new User(UUID.randomUUID(), now, email, firstName, lastName, password));
     }
 
-    public void addUser(RESTUser user) {
+    public void addUser(DTOUser user) {
         if(usersRepository.existsUserByEmail(user.getEmail())) {
             return;
         }

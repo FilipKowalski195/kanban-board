@@ -29,7 +29,7 @@ public class Task extends Base {
     @ManyToOne
     private User assignee;
 
-    @Column(nullable = false)
+    @Column
     private Instant closedAt;
 
     @OneToOne

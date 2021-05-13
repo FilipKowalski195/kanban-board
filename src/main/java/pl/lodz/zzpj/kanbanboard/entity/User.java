@@ -29,6 +29,8 @@ public class User extends Base {
     @Column(nullable = false)
     private String password;
 
+
+
     public User() {
     }
 
