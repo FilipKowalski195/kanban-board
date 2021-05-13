@@ -1,8 +1,5 @@
 package pl.lodz.zzpj.kanbanboard.entity;
 
-
-import jdk.jfr.Name;
-
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import java.time.Instant;
@@ -28,8 +25,6 @@ public class User extends Base {
 
     @Column(nullable = false)
     private String password;
-
-
 
     public User() {
     }
