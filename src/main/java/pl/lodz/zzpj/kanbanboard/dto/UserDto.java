@@ -1,17 +1,19 @@
 package pl.lodz.zzpj.kanbanboard.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Value;
 
-@Data
-@AllArgsConstructor
+import java.time.Instant;
+import java.util.UUID;
+
+@Value
 public class UserDto {
+    UUID uuid;
 
-    private String email;
+    Instant createdAt;
 
-    private String firstName;
+    String email;
 
-    private String lastName;
+    String firstName;
 
-    private String password;
+    String lastName;
 }

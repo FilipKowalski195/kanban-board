@@ -6,11 +6,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import pl.lodz.zzpj.kanbanboard.dto.NewUserDto;
 import pl.lodz.zzpj.kanbanboard.dto.UserDto;
-import pl.lodz.zzpj.kanbanboard.entity.User;
+import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
+import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
 import pl.lodz.zzpj.kanbanboard.service.UserService;
+import pl.lodz.zzpj.kanbanboard.service.converter.UserConverter;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class UsersResources {
@@ -23,20 +28,29 @@ public class UsersResources {
     }
 
     @GetMapping("/user")
-    public List<User> getAllUsers(){
-        return userService.getAllUsers();
+    public List<UserDto> getAllUsers() {
+        return userService
+                .getAllUsers()
+                .stream()
+                .map(UserConverter::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/user/{mail}")
-    public User getUserByEmail(@PathVariable String mail){
-        return userService.getUserByEmail(mail);
+    public UserDto getUserByEmail(@PathVariable String mail) throws NotFoundException {
+        return UserConverter.toDto(userService.getUserByEmail(mail));
     }
 
     @PostMapping("/user")
-    public User addUser(@RequestBody UserDto user){
+    public UserDto addUser(@RequestBody @Valid NewUserDto userDto) throws BaseException {
 
-        userService.addUser(user);
+        var user = userService.addUser(
+                userDto.getEmail(),
+                userDto.getFirstName(),
+                userDto.getLastName(),
+                userDto.getPassword()
+        );
 
-        return userService.getUserByEmail(user.getEmail());
+        return UserConverter.toDto(user);
     }
 }
