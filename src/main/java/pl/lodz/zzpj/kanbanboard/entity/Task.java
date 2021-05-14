@@ -1,6 +1,7 @@
 package pl.lodz.zzpj.kanbanboard.entity;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,7 +14,7 @@ public class Task extends Base {
     @GeneratedValue
     private Long id;
 
-    enum Status {
+    public enum Status {
         TODO, IN_PROGRESS, TO_REVIEW, DONE, CANCELED
     }
 
@@ -34,6 +35,7 @@ public class Task extends Base {
 
     @OneToOne
     @NotNull
+    @Valid
     private TaskDetails details;
 
     public Task() {

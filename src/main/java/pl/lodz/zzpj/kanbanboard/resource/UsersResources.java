@@ -30,27 +30,25 @@ public class UsersResources {
     @GetMapping("/user")
     public List<UserDto> getAllUsers() {
         return userService
-                .getAllUsers()
+                .getAll()
                 .stream()
                 .map(UserConverter::toDto)
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/user/{mail}")
-    public UserDto getUserByEmail(@PathVariable String mail) throws NotFoundException {
-        return UserConverter.toDto(userService.getUserByEmail(mail));
+    @GetMapping("/user/{email}")
+    public UserDto getUserByEmail(@PathVariable String email) throws NotFoundException {
+        return UserConverter.toDto(userService.getUserByEmail(email).get());
     }
 
     @PostMapping("/user")
-    public UserDto addUser(@RequestBody @Valid NewUserDto userDto) throws BaseException {
+    public void addUser(@RequestBody @Valid NewUserDto userDto) throws BaseException {
 
-        var user = userService.addUser(
+        userService.add(
                 userDto.getEmail(),
                 userDto.getFirstName(),
                 userDto.getLastName(),
                 userDto.getPassword()
         );
-
-        return UserConverter.toDto(user);
     }
 }

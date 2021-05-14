@@ -2,12 +2,12 @@ package pl.lodz.zzpj.kanbanboard.entity;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "reviews")
-public class Review {
+public class Review extends Base{
 
     @Id
     @GeneratedValue
@@ -21,21 +21,16 @@ public class Review {
     private String comment;
 
     @NotNull
-    @PastOrPresent
-    @Column(nullable = false)
-    private Instant publishTime;
-
-    @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private boolean rejected;
 
     public Review() {
     }
 
-    public Review(@NotNull User reviewer, String comment, @NotNull @PastOrPresent Instant publishTime, @NotNull boolean rejected) {
+    public Review(UUID uuid, Instant createdAt ,User reviewer, String comment, boolean rejected) {
+        super(uuid, createdAt);
         this.reviewer = reviewer;
         this.comment = comment;
-        this.publishTime = publishTime;
         this.rejected = rejected;
     }
 
@@ -45,10 +40,6 @@ public class Review {
 
     public String getComment() {
         return comment;
-    }
-
-    public Instant getPublishTime() {
-        return publishTime;
     }
 
     public boolean isRejected() {
