@@ -3,6 +3,8 @@ package pl.lodz.zzpj.kanbanboard.entity;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -26,6 +28,12 @@ public class User extends Base {
     @Column(nullable = false)
     private String password;
 
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+    @JoinTable(	name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+
     public User() {
     }
 
@@ -35,6 +43,32 @@ public class User extends Base {
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
+        roles.add(new Role(ERole.USER));
+    }
+
+    public User(UUID uuid, Instant createdAt,  @Email String email, String firstName, String lastName, String password, Set<Role> roles) {
+        super(uuid, createdAt);
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+        this.roles = roles;
+    }
+
+    public User(
+            UUID uuid, Instant createdAt, Long id, String email, String firstName, String lastName, String password,
+            Set<Role> roles) {
+        super(uuid, createdAt);
+        this.id = id;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+        this.roles = roles;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
     }
 
     public Long getId() {

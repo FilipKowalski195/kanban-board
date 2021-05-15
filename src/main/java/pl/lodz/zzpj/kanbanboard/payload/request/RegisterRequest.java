@@ -1,4 +1,4 @@
-package pl.lodz.zzpj.kanbanboard.dto;
+package pl.lodz.zzpj.kanbanboard.payload.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
 
 @Data
 @AllArgsConstructor
-public class NewUserDto {
+public class RegisterRequest {
 
     @Email
     @NotBlank
