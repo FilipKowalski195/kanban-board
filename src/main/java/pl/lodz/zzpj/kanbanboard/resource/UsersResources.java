@@ -10,6 +10,8 @@ import pl.lodz.zzpj.kanbanboard.dto.NewUserDto;
 import pl.lodz.zzpj.kanbanboard.dto.UserDto;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
+import pl.lodz.zzpj.kanbanboard.remote.HolidayApi;
+import pl.lodz.zzpj.kanbanboard.remote.data.Holiday;
 import pl.lodz.zzpj.kanbanboard.service.UserService;
 import pl.lodz.zzpj.kanbanboard.service.converter.UserConverter;
 
@@ -52,5 +54,13 @@ public class UsersResources {
         );
 
         return UserConverter.toDto(user);
+    }
+
+    @Autowired
+    private HolidayApi api;
+
+    @GetMapping("/test")
+    public List<Holiday> test() {
+        return api.getHolidays("2021", "PL").block();
     }
 }
