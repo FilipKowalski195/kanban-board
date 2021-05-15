@@ -14,7 +14,7 @@ public class Review extends Base{
     private Long id;
 
     @NotNull
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     private User reviewer;
 
     @Column

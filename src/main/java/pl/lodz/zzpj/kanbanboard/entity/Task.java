@@ -33,7 +33,7 @@ public class Task extends Base {
     @Column
     private Instant closedAt;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @NotNull
     @Valid
     private TaskDetails details;

@@ -34,7 +34,7 @@ public class TaskDetails {
     @Column(nullable = false)
     private Difficulty difficulty;
 
-    @OneToMany()
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Review> reviews;
 
     public TaskDetails() {

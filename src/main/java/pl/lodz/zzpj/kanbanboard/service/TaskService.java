@@ -73,8 +73,7 @@ public class TaskService extends BaseService {
 
     public void add(String creatorEmail, String name, String description, Instant deadLine, Difficulty difficulty)
             throws NotFoundException, BadOperationException {
-        var creator = usersRepository.findUserByEmail(creatorEmail)
-                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", creatorEmail));
+        var creator = getUserByEmailOrThrow(creatorEmail);
 
         var newTaskDetails = new TaskDetails(name, description, deadLine, difficulty, new ArrayList<>());
 
@@ -86,23 +85,20 @@ public class TaskService extends BaseService {
     }
 
     public void assign(UUID taskUuid, String assigneeEmail) throws NotFoundException {
-        var assignee = usersRepository.findUserByEmail(assigneeEmail)
-                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", assigneeEmail));
+        var assignee = getUserByEmailOrThrow(assigneeEmail);
 
-        var task = tasksRepository.findByUuid(taskUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid));
+        var task = getTaskByUuidOrThrow(taskUuid);
 
         task.setAssignee(assignee);
         tasksRepository.save(task);
     }
 
     public void close(UUID taskUuid) throws NotFoundException, ConflictException {
-        var task = getTaskByUUID(taskUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid));
+        var task = getTaskByUuidOrThrow(taskUuid);
 
         // Cannot close task if it is not DONE or CANCELED
-        if(Set.of(Status.TODO, Status.IN_PROGRESS, Status.TO_REVIEW).contains(task.getStatus())){
-            throw ConflictException.invalidTaskStatus(task);
+        if (Set.of(Status.TODO, Status.IN_PROGRESS, Status.TO_REVIEW).contains(task.getStatus())) {
+            throw ConflictException.cannotCloseTask(task);
         }
         task.setClosedAt(dateProvider.now());
         tasksRepository.save(task);
@@ -111,9 +107,7 @@ public class TaskService extends BaseService {
     public void updateTaskDetails(
             UUID taskUuid, String name, String description, Instant deadLine, Difficulty difficulty)
             throws NotFoundException, BadOperationException {
-        var taskDetails = getTaskByUUID(taskUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid))
-                .getDetails();
+        var taskDetails = getTaskByUuidOrThrow(taskUuid).getDetails();
 
         taskDetails.setName(name);
         taskDetails.setDescription(description);
@@ -123,15 +117,24 @@ public class TaskService extends BaseService {
     }
 
     public void changeStatus(UUID taskUuid, Status newStatus) throws NotFoundException, ConflictException {
-        var task = getTaskByUUID(taskUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid));
+        var task = getTaskByUuidOrThrow(taskUuid);
 
         var taskReviews = task.getDetails().getReviews();
-        var lastReview = taskReviews.isEmpty()? null : taskReviews.get(taskReviews.size() -1);
+        var lastReview = taskReviews.isEmpty() ? null : taskReviews.get(taskReviews.size() - 1);
+
+        // Cannot change task's status to TO_REVIEW or DONE if it's TO DO
+        if (Status.TODO.equals(task.getStatus()) && Set.of(Status.TO_REVIEW, Status.DONE).contains(newStatus)) {
+            throw ConflictException.invalidTaskStatus(task, newStatus);
+        }
 
         // Cannot change task's status to DONE if it isn't positively reviewed
-        if((lastReview == null || lastReview.isRejected()) && Status.DONE.equals(newStatus)){
-            if(Set.of(Status.TODO, Status.IN_PROGRESS, Status.TO_REVIEW).contains(task.getStatus())){
+        if (Status.DONE.equals(newStatus)) {
+
+            if (lastReview == null) {
+                throw ConflictException.noReview(task);
+            }
+
+            if (lastReview.isRejected()) {
                 throw ConflictException.unsatisfiedReview(task, lastReview);
             }
         }
@@ -142,16 +145,14 @@ public class TaskService extends BaseService {
 
     public void addReview(UUID taskUuid, String reviewerEmail, String comment, boolean rejected)
             throws BadOperationException, NotFoundException, ConflictException {
-        var task = getTaskByUUID(taskUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid));
+        var task = getTaskByUuidOrThrow(taskUuid);
 
         // Cannot add review to task that isn't TO_REVIEW
-        if(!Status.TO_REVIEW.equals(task.getStatus())){
+        if (!Status.TO_REVIEW.equals(task.getStatus())) {
             throw ConflictException.cannotAddReview(task);
         }
 
-        var reviewer = usersRepository.findUserByEmail(reviewerEmail)
-                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", reviewerEmail));
+        var reviewer = getUserByEmailOrThrow(reviewerEmail);
 
         var newReview = new Review(UUID.randomUUID(), dateProvider.now(), reviewer, comment, rejected);
 
@@ -164,10 +165,24 @@ public class TaskService extends BaseService {
     }
 
     public void updateReviewComment(UUID reviewUuid, String newComment) throws NotFoundException {
-        var review = reviewsRepository.findByUuid(reviewUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Review.class, "uuid", reviewUuid));
+        var review = getReviewByUuidOrThrow(reviewUuid);
 
         review.setComment(newComment);
         reviewsRepository.save(review);
+    }
+
+    private Task getTaskByUuidOrThrow(UUID taskUuid) throws NotFoundException {
+        return tasksRepository.findByUuid(taskUuid)
+                .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid));
+    }
+
+    private Review getReviewByUuidOrThrow(UUID reviewUuid) throws NotFoundException {
+        return reviewsRepository.findByUuid(reviewUuid)
+                .orElseThrow(() -> NotFoundException.notFound(Review.class, "uuid", reviewUuid));
+    }
+
+    private User getUserByEmailOrThrow(String email) throws NotFoundException {
+        return usersRepository.findUserByEmail(email)
+                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", email));
     }
 }
