@@ -4,11 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pl.lodz.zzpj.kanbanboard.dto.user.NewUserDto;
 import pl.lodz.zzpj.kanbanboard.dto.user.UserDto;
-import pl.lodz.zzpj.kanbanboard.entity.User;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
-import pl.lodz.zzpj.kanbanboard.remote.HolidayApi;
-import pl.lodz.zzpj.kanbanboard.remote.data.Holiday;
 import pl.lodz.zzpj.kanbanboard.service.UserService;
 import pl.lodz.zzpj.kanbanboard.service.converter.UserConverter;
 
@@ -17,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/user")
 public class UsersResources {
 
     private final UserService userService;
@@ -26,7 +24,7 @@ public class UsersResources {
         this.userService = userService;
     }
 
-    @GetMapping("/user")
+    @GetMapping
     public List<UserDto> getAllUsers() {
         return userService
                 .getAll()
@@ -35,15 +33,12 @@ public class UsersResources {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/user/{email}")
+    @GetMapping("/{email}")
     public UserDto getUserByEmail(@PathVariable String email) throws NotFoundException {
-        var user = userService.getUserByEmail(email)
-                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", email));
-
-        return UserConverter.toDto(user);
+        return UserConverter.toDto(userService.getUserByEmail(email));
     }
 
-    @PostMapping("/user")
+    @PostMapping
     public void addUser(@RequestBody @Valid NewUserDto userDto) throws BaseException {
 
         userService.add(
@@ -52,13 +47,5 @@ public class UsersResources {
                 userDto.getLastName(),
                 userDto.getPassword()
         );
-    }
-
-    @Autowired
-    private HolidayApi api;
-
-    @GetMapping("/test")
-    public List<Holiday> test() {
-        return api.getHolidays("2021", "PL").block();
     }
 }
