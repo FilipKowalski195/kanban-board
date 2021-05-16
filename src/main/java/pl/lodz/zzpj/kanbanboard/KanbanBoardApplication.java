@@ -7,7 +7,6 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.Locale;
 
 @SpringBootApplication
-@PropertySource("classpath:private.properties")
 public class KanbanBoardApplication {
 
     public static void main(String[] args) {
