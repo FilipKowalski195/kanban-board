@@ -14,6 +14,7 @@ import pl.lodz.zzpj.kanbanboard.utils.UserFiller;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -41,18 +42,17 @@ public class UserService extends BaseService {
         UserFiller.fillRepo(usersRepository, dateProvider, passwordEncoder);
     }
 
-
     public User getUserByEmail(String email) throws NotFoundException {
         return usersRepository
                 .findUserByEmail(email)
                 .orElseThrow(() -> NotFoundException.notFound(User.class, "email", email));
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getAll() {
         return usersRepository.findAll();
     }
 
-    public User addUser(String email, String firstName, String lastName, String password) throws BaseException {
+    public void add(String email, String firstName, String lastName, String password) throws BaseException {
 
         if (usersRepository.existsUserByEmail(email)) {
             throw ConflictException.uniqueField(User.class, "email", email);

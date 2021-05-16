@@ -15,7 +15,7 @@ public class TaskDetails {
     private Long id;
 
     // LOW ~1h, MEDIUM ~4h, HIGH ~8h
-    enum Difficulty {
+    public enum Difficulty {
         LOW, MEDIUM, HIGH
     }
 
@@ -36,7 +36,7 @@ public class TaskDetails {
     @Column(nullable = false)
     private Difficulty difficulty;
 
-    @OneToMany()
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Review> reviews;
 
     public TaskDetails() {
@@ -64,16 +64,32 @@ public class TaskDetails {
         return name;
     }
 
+    public void setName(String name){
+        this.name = name;
+    }
+
     public String getDescription() {
         return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Instant getDeadLine() {
         return deadLine;
     }
 
+    public void setDeadLine(Instant deadLine) {
+        this.deadLine = deadLine;
+    }
+
     public Difficulty getDifficulty() {
         return difficulty;
+    }
+
+    public void setDifficulty(Difficulty difficulty) {
+        this.difficulty = difficulty;
     }
 
     public List<Review> getReviews() {
