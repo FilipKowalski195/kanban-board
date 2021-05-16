@@ -2,6 +2,7 @@ package pl.lodz.zzpj.kanbanboard.entity;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,22 +17,28 @@ public class User extends Base {
     private Long id;
 
     @Email
+    @NotBlank
     @Column(nullable = false, unique = true)
     private String email;
 
+    @NotBlank
     @Column(nullable = false)
     private String firstName;
 
+    @NotBlank
     @Column(nullable = false)
     private String lastName;
 
+    @NotBlank
     @Column(nullable = false)
     private String password;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
-    @JoinTable(	name = "user_roles",
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
     private Set<Role> roles = new HashSet<>();
 
     public User() {
@@ -43,10 +50,18 @@ public class User extends Base {
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
-        roles.add(new Role(Role.ERole.USER));
+        roles.add(new Role(Role.USER));
     }
 
-    public User(UUID uuid, Instant createdAt,  @Email String email, String firstName, String lastName, String password, Set<Role> roles) {
+    public User(
+            UUID uuid,
+            Instant createdAt,
+            String email,
+            String firstName,
+            String lastName,
+            String password,
+            Set<Role> roles
+    ) {
         super(uuid, createdAt);
         this.email = email;
         this.firstName = firstName;
@@ -56,8 +71,15 @@ public class User extends Base {
     }
 
     public User(
-            UUID uuid, Instant createdAt, Long id, String email, String firstName, String lastName, String password,
-            Set<Role> roles) {
+            UUID uuid,
+            Instant createdAt,
+            Long id,
+            String email,
+            String firstName,
+            String lastName,
+            String password,
+            Set<Role> roles
+    ) {
         super(uuid, createdAt);
         this.id = id;
         this.email = email;

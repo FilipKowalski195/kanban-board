@@ -1,35 +1,31 @@
 package pl.lodz.zzpj.kanbanboard.entity;
 
-import org.checkerframework.common.aliasing.qual.Unique;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "roles")
 public class Role {
-    public enum ERole {
-        LEADER,REVIEWER,USER;
-    }
+    public static final String USER = "USER";
+    public static final String ADMIN = "ADMIN";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private ERole name;
+    @Column(length = 20, nullable = false)
+    @NotBlank
+    private String name;
 
     public Role() {
     }
 
-    public Role(ERole name) {
+    public Role(String name) {
         this.name = name;
     }
 
@@ -41,11 +37,11 @@ public class Role {
         this.id = id;
     }
 
-    public ERole getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(ERole name) {
+    public void setName(String name) {
         this.name = name;
     }
 }

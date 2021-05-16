@@ -5,7 +5,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.lodz.zzpj.kanbanboard.entity.Role;
 import pl.lodz.zzpj.kanbanboard.entity.User;
-import pl.lodz.zzpj.kanbanboard.exceptions.BadOperationException;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.ConflictException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
@@ -14,9 +13,7 @@ import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 import pl.lodz.zzpj.kanbanboard.utils.UserFiller;
 
 import javax.annotation.PostConstruct;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -26,23 +23,28 @@ public class UserService extends BaseService {
 
     private final DateProvider dateProvider;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UsersRepository usersRepository, DateProvider dateProvider) {
+    public UserService(
+            UsersRepository usersRepository,
+            DateProvider dateProvider,
+            PasswordEncoder passwordEncoder
+    ) {
         this.usersRepository = usersRepository;
         this.dateProvider = dateProvider;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostConstruct
-    private void fill() throws BadOperationException {
-        UserFiller.fillRepo(usersRepository,dateProvider,passwordEncoder);
+    private void fill() {
+        UserFiller.fillRepo(usersRepository, dateProvider, passwordEncoder);
     }
 
 
     public User getUserByEmail(String email) throws NotFoundException {
-        return usersRepository.findUserByEmail(email)
+        return usersRepository
+                .findUserByEmail(email)
                 .orElseThrow(() -> NotFoundException.notFound(User.class, "email", email));
     }
 
@@ -65,7 +67,7 @@ public class UserService extends BaseService {
                 password
         );
 
-        user.getRoles().add(new Role(Role.ERole.USER));
+        user.getRoles().add(new Role(Role.USER));
 
         return catchingValidation(() -> usersRepository.save(user));
     }

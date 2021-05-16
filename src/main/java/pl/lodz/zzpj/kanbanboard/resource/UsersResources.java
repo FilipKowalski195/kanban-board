@@ -1,7 +1,6 @@
 package pl.lodz.zzpj.kanbanboard.resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,10 +15,8 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
-
 public class UsersResources {
 
-    @Autowired
     private final UserService userService;
 
     @Autowired

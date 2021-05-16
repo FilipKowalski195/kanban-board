@@ -15,7 +15,9 @@ import java.util.Date;
 public class JwtTokenProvider {
     private static final SignatureAlgorithm ALGORITHM = SignatureAlgorithm.HS512;
     private static final Key SECRET_KEY = Keys.secretKeyFor(ALGORITHM);
-    private long validityInMilliseconds = 1800000; // 30m
+
+    @Value("${token.validityMs}")
+    private long validityMs; // 30m
 
     public String createToken(Authentication authentication) {
 
@@ -24,24 +26,31 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + validityInMilliseconds))
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .setExpiration(new Date((new Date()).getTime() + validityMs))
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS512)
                 .compact();
     }
 
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(authToken);
+            Jwts.parserBuilder()
+                    .setSigningKey(SECRET_KEY)
+                    .build()
+                    .parseClaimsJws(authToken);
             return true;
         } catch (Exception e) {
+            return false;
         }
-
-        return false;
     }
 
 }
