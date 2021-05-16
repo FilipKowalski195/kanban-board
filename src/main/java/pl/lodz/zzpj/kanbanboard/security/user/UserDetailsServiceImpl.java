@@ -12,7 +12,7 @@ import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 	@Autowired
-	UsersRepository usersRepository;
+	private UsersRepository usersRepository;
 
 	@Override
 	@Transactional

@@ -15,8 +15,6 @@ import java.util.Date;
 public class JwtTokenProvider {
     private static final SignatureAlgorithm ALGORITHM = SignatureAlgorithm.HS512;
     private static final Key SECRET_KEY = Keys.secretKeyFor(ALGORITHM);
-
-    @Value("${security.jwt.token.expire-length:1800000}")
     private long validityInMilliseconds = 1800000; // 30m
 
     public String createToken(Authentication authentication) {

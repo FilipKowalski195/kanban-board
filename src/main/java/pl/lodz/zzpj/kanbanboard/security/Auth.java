@@ -2,23 +2,24 @@ package pl.lodz.zzpj.kanbanboard.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pl.lodz.zzpj.kanbanboard.dto.UserDto;
 import pl.lodz.zzpj.kanbanboard.payload.request.LoginRequest;
 import pl.lodz.zzpj.kanbanboard.payload.request.RegisterRequest;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.payload.response.JwtResponse;
-import pl.lodz.zzpj.kanbanboard.payload.response.MessageResponse;
 import pl.lodz.zzpj.kanbanboard.security.jwt.JwtTokenProvider;
 import pl.lodz.zzpj.kanbanboard.security.user.UserDetailsImpl;
 import pl.lodz.zzpj.kanbanboard.service.UserService;
+import pl.lodz.zzpj.kanbanboard.service.converter.UserConverter;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Auth {
 
     @Lazy
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
     private UserService userService;
@@ -38,9 +39,8 @@ public class Auth {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public JwtResponse authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
@@ -50,28 +50,21 @@ public class Auth {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
+        return new JwtResponse(jwt,
                 userDetails.getUsername(),
-                roles));
+                roles);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody @Valid RegisterRequest userDto) throws BaseException {
-        try{
-            var user = userService.addUser(
-                    userDto.getEmail(),
-                    userDto.getFirstName(),
-                    userDto.getLastName(),
-                    userDto.getPassword()
-            );
-        }catch (BaseException e){
-            return ResponseEntity.ok(new MessageResponse("Registration failure!"));
-        }
-
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    public UserDto registerUser(@RequestBody @Valid RegisterRequest userDto) throws BaseException {
+        return UserConverter.toDto(userService.addUser(
+                userDto.getEmail(),
+                userDto.getFirstName(),
+                userDto.getLastName(),
+                userDto.getPassword()
+        ));
     }
-
 }

@@ -4,6 +4,8 @@ import pl.lodz.zzpj.kanbanboard.payload.request.RegisterRequest;
 import pl.lodz.zzpj.kanbanboard.dto.UserDto;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.util.UUID;
 

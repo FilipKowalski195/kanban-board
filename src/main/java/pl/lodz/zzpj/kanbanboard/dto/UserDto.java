@@ -16,4 +16,12 @@ public class UserDto {
     String firstName;
 
     String lastName;
+
+    public UserDto(UUID uuid, Instant createdAt, String email, String firstName, String lastName) {
+        this.uuid = uuid;
+        this.createdAt = createdAt;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
 }

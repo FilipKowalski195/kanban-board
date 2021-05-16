@@ -34,22 +34,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-//        http
-//                //HTTP Basic authentication
-//                .httpBasic()
-//                .and()
-//                .authorizeRequests()
-//                .antMatchers(HttpMethod.GET, "/persons/**").hasRole("USER")
-//                .antMatchers(HttpMethod.POST, "/persons").hasRole("ADMIN")
-//                .antMatchers(HttpMethod.PUT, "/persons/**").hasRole("ADMIN")
-//                .antMatchers(HttpMethod.PATCH, "/persons/**").hasRole("ADMIN")
-//                .antMatchers(HttpMethod.DELETE, "/persons/**").hasRole("ADMIN")
-//                .and()
-//                .csrf().disable()
-//                .formLogin().disable();
-
-
-
         http.cors().and().csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(authEntryPoint).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
@@ -62,8 +46,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-
-        // TokenAuthenticationFilter will ignore the below paths
         web.ignoring().antMatchers(
                 HttpMethod.POST, "/auth/**"
         );

@@ -27,7 +27,7 @@ public class UsersResources {
         this.userService = userService;
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public List<UserDto> getAllUsers() {
         return userService
                 .getAllUsers()

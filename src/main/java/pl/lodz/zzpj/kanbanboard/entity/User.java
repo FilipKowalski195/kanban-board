@@ -43,7 +43,7 @@ public class User extends Base {
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
-        roles.add(new Role(ERole.USER));
+        roles.add(new Role(Role.ERole.USER));
     }
 
     public User(UUID uuid, Instant createdAt,  @Email String email, String firstName, String lastName, String password, Set<Role> roles) {

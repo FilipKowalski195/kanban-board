@@ -27,9 +27,7 @@ public class ExceptionsHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleNotFound(HttpServletRequest req, NotFoundException exception) {
-
         var response = ErrorResponseDto.from(HttpStatus.NOT_FOUND, req, exception, dateProvider.now());
-
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
@@ -38,7 +36,6 @@ public class ExceptionsHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponseDto> handleConflict(HttpServletRequest req, NotFoundException exception) {
         var response = ErrorResponseDto.from(HttpStatus.CONFLICT, req, exception, dateProvider.now());
-
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(response);

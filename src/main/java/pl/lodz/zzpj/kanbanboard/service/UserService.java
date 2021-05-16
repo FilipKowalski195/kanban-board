@@ -3,7 +3,6 @@ package pl.lodz.zzpj.kanbanboard.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import pl.lodz.zzpj.kanbanboard.entity.ERole;
 import pl.lodz.zzpj.kanbanboard.entity.Role;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 import pl.lodz.zzpj.kanbanboard.exceptions.BadOperationException;
@@ -12,6 +11,7 @@ import pl.lodz.zzpj.kanbanboard.exceptions.ConflictException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
 import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
 import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
+import pl.lodz.zzpj.kanbanboard.utils.UserFiller;
 
 import javax.annotation.PostConstruct;
 import java.util.HashSet;
@@ -27,7 +27,7 @@ public class UserService extends BaseService {
     private final DateProvider dateProvider;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public UserService(UsersRepository usersRepository, DateProvider dateProvider) {
@@ -36,28 +36,10 @@ public class UserService extends BaseService {
     }
 
     @PostConstruct
-    public void fillRepo() throws BadOperationException {
-        Set<Role> admin = new HashSet<>();
-        admin.add(new Role(ERole.LEADER));
-        admin.add(new Role(ERole.REVIEWER));
-        admin.add(new Role(ERole.USER));
-        User adminEntity = new User(UUID.randomUUID(), dateProvider.now(), "admin@gmail.com", "Admin", "AdminLast",  passwordEncoder.encode("qwerty123"), admin);
-
-        Set<Role> reviewier = new HashSet<>();
-        reviewier.add(new Role(ERole.USER));
-        reviewier.add(new Role(ERole.REVIEWER));
-        User reviewierEntity = new User(UUID.randomUUID(), dateProvider.now(), "reviewer@gmail.com", "Reviewer", "ReviewerLast",  passwordEncoder.encode("qwerty123"), reviewier);
-
-        Set<Role> user = new HashSet<>();
-        user.add(new Role(ERole.USER));
-        User userEntity = new User(UUID.randomUUID(), dateProvider.now(), "user@gmail.com", "User", "UserLast", passwordEncoder.encode("qwerty123"), user);
-
-        usersRepository.save(userEntity);
-
-        usersRepository.save(reviewierEntity);
-
-        usersRepository.save(adminEntity);
+    private void fill() throws BadOperationException {
+        UserFiller.fillRepo(usersRepository,dateProvider,passwordEncoder);
     }
+
 
     public User getUserByEmail(String email) throws NotFoundException {
         return usersRepository.findUserByEmail(email)
@@ -83,7 +65,7 @@ public class UserService extends BaseService {
                 password
         );
 
-        user.getRoles().add(new Role(ERole.USER));
+        user.getRoles().add(new Role(Role.ERole.USER));
 
         return catchingValidation(() -> usersRepository.save(user));
     }
