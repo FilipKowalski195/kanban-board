@@ -1,6 +1,7 @@
 package pl.lodz.zzpj.kanbanboard.entity;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,7 +14,7 @@ public class Task extends Base {
     @GeneratedValue
     private Long id;
 
-    enum Status {
+    public enum Status {
         TODO, IN_PROGRESS, TO_REVIEW, DONE, CANCELED
     }
 
@@ -32,8 +33,9 @@ public class Task extends Base {
     @Column
     private Instant closedAt;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @NotNull
+    @Valid
     private TaskDetails details;
 
     public Task() {
@@ -59,6 +61,24 @@ public class Task extends Base {
         this.status = status;
         this.closedAt = closedAt;
         this.details = details;
+    }
+
+    public boolean isAssigned() {
+        return assignee != null;
+    }
+
+    public boolean isFinished() {
+        return status == Status.DONE || status == Status.CANCELED;
+    }
+
+    public void closeTask(Instant now) {
+        status = Status.DONE;
+        closedAt = now;
+    }
+
+    public void cancelTask(Instant now) {
+        status = Status.CANCELED;
+        closedAt = now;
     }
 
     public Long getId() {
@@ -96,4 +116,10 @@ public class Task extends Base {
     public TaskDetails getDetails() {
         return details;
     }
+
+    public void setDetails(TaskDetails details) {
+        this.details = details;
+    }
+
+
 }

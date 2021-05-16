@@ -1,4 +1,4 @@
-package pl.lodz.zzpj.kanbanboard.dto;
+package pl.lodz.zzpj.kanbanboard.dto.user;
 
 import lombok.Value;
 

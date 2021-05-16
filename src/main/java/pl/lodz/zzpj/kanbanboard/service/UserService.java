@@ -10,6 +10,7 @@ import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
 import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,16 +26,16 @@ public class UserService extends BaseService {
         this.dateProvider = dateProvider;
     }
 
-    public User getUserByEmail(String email) throws NotFoundException {
-        return usersRepository.findUserByEmail(email)
-                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", email));
+    public Optional<User> getUserByEmail(String email) throws NotFoundException {
+        return Optional.of(usersRepository.findUserByEmail(email)
+                .orElseThrow(() -> NotFoundException.notFound(User.class, "email", email)));
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getAll() {
         return usersRepository.findAll();
     }
 
-    public User addUser(String email, String firstName, String lastName, String password) throws BaseException {
+    public void add(String email, String firstName, String lastName, String password) throws BaseException {
 
         if (usersRepository.existsUserByEmail(email)) {
             throw ConflictException.uniqueField(User.class, "email", email);
@@ -49,6 +50,6 @@ public class UserService extends BaseService {
                 password
         );
 
-        return catchingValidation(() -> usersRepository.save(user));
+        catchingValidation(() -> usersRepository.save(user));
     }
 }
