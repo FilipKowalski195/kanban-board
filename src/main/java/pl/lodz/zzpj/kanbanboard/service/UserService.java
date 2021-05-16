@@ -14,7 +14,6 @@ import pl.lodz.zzpj.kanbanboard.utils.UserFiller;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -69,7 +68,7 @@ public class UserService extends BaseService {
 
         user.getRoles().add(new Role(Role.USER));
 
-        return catchingValidation(() -> usersRepository.save(user));
+        catchingValidation(() -> usersRepository.save(user));
     }
 
 }

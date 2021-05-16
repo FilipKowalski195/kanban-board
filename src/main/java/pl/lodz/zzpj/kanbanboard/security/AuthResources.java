@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pl.lodz.zzpj.kanbanboard.dto.UserDto;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.payload.request.LoginRequest;
 import pl.lodz.zzpj.kanbanboard.payload.request.RegisterRequest;
@@ -17,7 +16,6 @@ import pl.lodz.zzpj.kanbanboard.payload.response.JwtResponse;
 import pl.lodz.zzpj.kanbanboard.security.jwt.JwtTokenProvider;
 import pl.lodz.zzpj.kanbanboard.security.user.UserDetailsImpl;
 import pl.lodz.zzpj.kanbanboard.service.UserService;
-import pl.lodz.zzpj.kanbanboard.service.converter.UserConverter;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -65,12 +63,13 @@ public class AuthResources {
     }
 
     @PostMapping("/register")
-    public UserDto registerUser(@RequestBody @Valid RegisterRequest userDto) throws BaseException {
-        return UserConverter.toDto(userService.addUser(
+    public void registerUser(@RequestBody @Valid RegisterRequest userDto) throws BaseException {
+
+        userService.add(
                 userDto.getEmail(),
                 userDto.getFirstName(),
                 userDto.getLastName(),
                 userDto.getPassword()
-        ));
+        );
     }
 }
