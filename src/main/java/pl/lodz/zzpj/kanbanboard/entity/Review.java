@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "reviews")
-public class Review extends Base{
+public class Review extends Base {
 
     @Id
     @GeneratedValue

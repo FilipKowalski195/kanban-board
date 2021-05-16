@@ -7,12 +7,9 @@ import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.UUID;
 
 @Value
 public class TaskDetailsDto {
-
-    UUID taskUuid;
 
     @NotBlank
     String name;

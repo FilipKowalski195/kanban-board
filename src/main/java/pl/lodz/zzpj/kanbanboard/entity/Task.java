@@ -63,6 +63,24 @@ public class Task extends Base {
         this.details = details;
     }
 
+    public boolean isAssigned() {
+        return assignee != null;
+    }
+
+    public boolean isFinished() {
+        return status == Status.DONE || status == Status.CANCELED;
+    }
+
+    public void closeTask(Instant now) {
+        status = Status.DONE;
+        closedAt = now;
+    }
+
+    public void cancelTask(Instant now) {
+        status = Status.CANCELED;
+        closedAt = now;
+    }
+
     public Long getId() {
         return id;
     }
@@ -98,4 +116,10 @@ public class Task extends Base {
     public TaskDetails getDetails() {
         return details;
     }
+
+    public void setDetails(TaskDetails details) {
+        this.details = details;
+    }
+
+
 }

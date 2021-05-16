@@ -2,16 +2,19 @@ package pl.lodz.zzpj.kanbanboard.dto.review;
 
 import lombok.Value;
 
-import java.util.UUID;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Value
 public class NewReviewDto {
 
-    UUID taskUuid;
-
+    @Email
+    @NotBlank
     String reviewerEmail;
 
     String comment;
 
-    boolean rejected;
+    @NotNull
+    Boolean rejected;
 }

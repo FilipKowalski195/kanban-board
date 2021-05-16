@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import pl.lodz.zzpj.kanbanboard.dto.ErrorResponseDto;
 import pl.lodz.zzpj.kanbanboard.exceptions.BadOperationException;
 import pl.lodz.zzpj.kanbanboard.exceptions.ConflictException;
+import pl.lodz.zzpj.kanbanboard.exceptions.ForbiddenException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
 import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
@@ -36,11 +37,20 @@ public class ExceptionsHandler {
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponseDto> handleConflict(HttpServletRequest req, NotFoundException exception) {
+    public ResponseEntity<ErrorResponseDto> handleConflict(HttpServletRequest req, ConflictException exception) {
         var response = ErrorResponseDto.from(HttpStatus.CONFLICT, req, exception, dateProvider.now());
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponseDto> handleForbidden(HttpServletRequest req, ForbiddenException exception) {
+        var response = ErrorResponseDto.from(HttpStatus.FORBIDDEN, req, exception, dateProvider.now());
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
                 .body(response);
     }
 

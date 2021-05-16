@@ -5,7 +5,10 @@ import pl.lodz.zzpj.kanbanboard.entity.Task;
 
 import java.util.stream.Collectors;
 
-public class TaskConverter {
+public final class TaskConverter {
+
+    private TaskConverter() {
+    }
 
     public static TaskDto toDto(Task task){
         return new TaskDto(
@@ -20,9 +23,9 @@ public class TaskConverter {
                 task.getDetails().getDeadLine(),
                 task.getDetails().getDifficulty(),
                 task.getDetails().getReviews()
-                .stream()
-                .map(ReviewConverter::toDto)
-                .collect(Collectors.toList())
+                        .stream()
+                        .map(ReviewConverter::toDto)
+                        .collect(Collectors.toList())
         );
     }
 }

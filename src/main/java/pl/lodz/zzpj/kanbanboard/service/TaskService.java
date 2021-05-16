@@ -1,19 +1,15 @@
 package pl.lodz.zzpj.kanbanboard.service;
 
+import com.google.common.collect.Iterables;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.lodz.zzpj.kanbanboard.entity.Review;
-import pl.lodz.zzpj.kanbanboard.entity.Task;
+import pl.lodz.zzpj.kanbanboard.entity.*;
 import pl.lodz.zzpj.kanbanboard.entity.Task.Status;
 import pl.lodz.zzpj.kanbanboard.entity.TaskDetails.Difficulty;
-import pl.lodz.zzpj.kanbanboard.entity.User;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.ConflictException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
-import pl.lodz.zzpj.kanbanboard.repository.ReviewsRepository;
-import pl.lodz.zzpj.kanbanboard.repository.TaskDetailsRepository;
-import pl.lodz.zzpj.kanbanboard.repository.TasksRepository;
-import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
+import pl.lodz.zzpj.kanbanboard.repository.*;
 import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
 import java.time.Instant;
@@ -24,9 +20,7 @@ public class TaskService extends BaseService {
 
     private final TasksRepository tasksRepository;
 
-    private final TaskDetailsRepository taskDetailsRepository;
-
-    private final ReviewsRepository reviewsRepository;
+    private final ProjectsRepository projectsRepository;
 
     private final UsersRepository usersRepository;
 
@@ -34,17 +28,18 @@ public class TaskService extends BaseService {
 
     @Autowired
     public TaskService(
-            TasksRepository tasksRepository, TaskDetailsRepository taskDetailsRepository,
-            ReviewsRepository reviewsRepository, UsersRepository usersRepository, DateProvider dateProvider) {
+            TasksRepository tasksRepository,
+            ProjectsRepository projectsRepository, UsersRepository usersRepository,
+            DateProvider dateProvider
+    ) {
         this.tasksRepository = tasksRepository;
-        this.taskDetailsRepository = taskDetailsRepository;
-        this.reviewsRepository = reviewsRepository;
+        this.projectsRepository = projectsRepository;
         this.usersRepository = usersRepository;
         this.dateProvider = dateProvider;
     }
 
-    public Optional<Task> getTaskByUUID(UUID taskUuid) {
-        return tasksRepository.findByUuid(taskUuid);
+    public Task getTaskByUUID(UUID taskUuid) throws NotFoundException {
+        return getTaskByUuidOrThrow(taskUuid);
     }
 
     public List<Task> getAllTasksCreatedBy(String userEmail) {
@@ -55,75 +50,118 @@ public class TaskService extends BaseService {
         return tasksRepository.findAllByAssignee_Email(userEmail);
     }
 
-    // TODO
-    // Maybe we should add some generic filters for Tasks
-    // They may be useful at implementation of extended logic
-
-    public void close(UUID taskUuid) throws BaseException {
-        var task = getTaskByUuidOrThrow(taskUuid);
-
-        // Cannot close task if it is not DONE or CANCELED
-        if (Set.of(Status.TODO, Status.IN_PROGRESS, Status.TO_REVIEW).contains(task.getStatus())) {
-            throw ConflictException.cannotCloseTask(task);
-        }
-        task.setClosedAt(dateProvider.now());
-        tasksRepository.save(task);
-    }
-
     public void updateTaskDetails(
-            UUID taskUuid, String name, String description, Instant deadLine, Difficulty difficulty)
-            throws BaseException {
-        var taskDetails = getTaskByUuidOrThrow(taskUuid).getDetails();
+            UUID taskUuid,
+            String name,
+            String description,
+            Instant deadLine,
+            Difficulty difficulty
+    ) throws BaseException {
+        var task  = getTaskByUuidOrThrow(taskUuid);
+        var taskDetails = task.getDetails();
 
         taskDetails.setName(name);
         taskDetails.setDescription(description);
         taskDetails.setDeadLine(deadLine);
         taskDetails.setDifficulty(difficulty);
-        catchingValidation(() -> taskDetailsRepository.save(taskDetails));
+
+        task.setDetails(taskDetails);
+
+        catchingValidation(() -> tasksRepository.save(task));
     }
 
     public void changeStatus(UUID taskUuid, Status newStatus) throws BaseException {
         var task = getTaskByUuidOrThrow(taskUuid);
 
-        var taskReviews = task.getDetails().getReviews();
-        var lastReview = taskReviews.isEmpty() ? null : taskReviews.get(taskReviews.size() - 1);
-
-        // Cannot change task's status to TO_REVIEW or DONE if it's TO DO
-        if (Status.TODO.equals(task.getStatus()) && Set.of(Status.TO_REVIEW, Status.DONE).contains(newStatus)) {
-            throw ConflictException.invalidTaskStatus(task, newStatus);
+        if (!task.isAssigned()) {
+            throw ConflictException.taskNotAssigned(task);
         }
 
-        // Cannot change task's status to DONE if it isn't positively reviewed
-        if (Status.DONE.equals(newStatus)) {
-
-            if (lastReview == null) {
-                throw ConflictException.noReview(task);
-            }
-
-            if (lastReview.isRejected()) {
-                throw ConflictException.unsatisfiedReview(task, lastReview);
-            }
+        if (task.isFinished()) {
+            throw ConflictException.closedTask();
         }
 
-        task.setStatus(newStatus);
+        if (newStatus == Status.DONE) {
+            assertReview(task);
+            task.closeTask(dateProvider.now());
+        } else if (newStatus == Status.CANCELED) {
+            task.cancelTask(dateProvider.now());
+        } else {
+            task.setStatus(newStatus);
+        }
+
+        catchingValidation(() -> tasksRepository.save(task));
+    }
+
+    private void assertReview(Task task) throws ConflictException {
+        var reviews = task.getDetails().getReviews();
+        var lastReview = Iterables.getLast(reviews, null);
+        var status = task.getStatus();
+
+        if (status != Status.TO_REVIEW || lastReview == null) {
+            throw ConflictException.noReview(task);
+        }
+
+        if (lastReview.isRejected()) {
+            throw ConflictException.rejectingReview(task, lastReview);
+        }
+    }
+
+    public void assign(UUID taskUuid, String assigneeEmail) throws BaseException {
+        var task = getTaskByUuidOrThrow(taskUuid);
+
+        if (task.isFinished()) {
+            throw ConflictException.closedTask();
+        }
+
+        var assignee = getUserByEmailOrThrow(assigneeEmail);
+        var project = projectsRepository
+                .findProjectByTasksContains(task)
+                .orElseThrow(() -> NotFoundException.notFound(Project.class, "task", taskUuid));
+
+        assertUserBeingProjectMember(project, assignee);
+
+        task.setAssignee(assignee);
         tasksRepository.save(task);
     }
 
-    public void updateReviewComment(UUID reviewUuid, String newComment) throws NotFoundException {
-        var review = getReviewByUuidOrThrow(reviewUuid);
+    public void reviewTask(UUID taskUuid, String reviewerEmail, String comment, boolean rejected) throws BaseException {
+        var task = getTaskByUuidOrThrow(taskUuid);
 
-        review.setComment(newComment);
-        reviewsRepository.save(review);
+        if (!Status.TO_REVIEW.equals(task.getStatus())) {
+            throw ConflictException.taskNotToReview(task);
+        }
+
+        var reviewer = getUserByEmailOrThrow(reviewerEmail);
+        var project = projectsRepository.findProjectByTasksContains(task)
+                .orElseThrow(() -> NotFoundException.notFound(Project.class, "task", task));
+
+        assertUserBeingProjectMember(project, reviewer);
+
+        var newReview = new Review(UUID.randomUUID(), dateProvider.now(), reviewer, comment, rejected);
+
+        var taskDetails = task.getDetails();
+
+        taskDetails.getReviews().add(newReview);
+        task.setDetails(taskDetails);
+        task.setStatus(Status.IN_PROGRESS);
+
+        catchingValidation(() -> tasksRepository.save(task));
+    }
+
+    private void assertUserBeingProjectMember(Project project, User user) throws ConflictException {
+
+        var findProjectWithMember = projectsRepository
+                .findProjectByUuidAndMembersContains(project.getUuid(), user);
+
+        if (findProjectWithMember.isEmpty()) {
+            throw ConflictException.notMemberOfProject(user, project);
+        }
     }
 
     private Task getTaskByUuidOrThrow(UUID taskUuid) throws NotFoundException {
         return tasksRepository.findByUuid(taskUuid)
                 .orElseThrow(() -> NotFoundException.notFound(Task.class, "uuid", taskUuid));
-    }
-
-    private Review getReviewByUuidOrThrow(UUID reviewUuid) throws NotFoundException {
-        return reviewsRepository.findByUuid(reviewUuid)
-                .orElseThrow(() -> NotFoundException.notFound(Review.class, "uuid", reviewUuid));
     }
 
     private User getUserByEmailOrThrow(String email) throws NotFoundException {

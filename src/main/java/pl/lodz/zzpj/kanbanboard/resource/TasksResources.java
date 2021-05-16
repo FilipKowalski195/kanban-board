@@ -2,9 +2,10 @@ package pl.lodz.zzpj.kanbanboard.resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pl.lodz.zzpj.kanbanboard.dto.review.UpdateReviewCommentDto;
+import pl.lodz.zzpj.kanbanboard.dto.review.NewReviewDto;
 import pl.lodz.zzpj.kanbanboard.dto.task.TaskDetailsDto;
 import pl.lodz.zzpj.kanbanboard.dto.task.TaskDto;
+import pl.lodz.zzpj.kanbanboard.entity.Task;
 import pl.lodz.zzpj.kanbanboard.entity.Task.Status;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
@@ -26,6 +27,11 @@ public class TasksResources {
         this.taskService = taskService;
     }
 
+    @GetMapping("/task/{taskUuid}")
+    public Task getTaskByUuid(@PathVariable UUID taskUuid) throws NotFoundException {
+        return taskService.getTaskByUUID(taskUuid);
+    }
+
     @GetMapping("/task/createdBy/{email}")
     public List<TaskDto> getAllTasksCreatedBy(@PathVariable String email) {
         return taskService.getAllTasksCreatedBy(email)
@@ -42,16 +48,29 @@ public class TasksResources {
                 .collect(Collectors.toList());
     }
 
-    @PutMapping("/task/{taskUuid}/close")
-    public void close(@PathVariable UUID taskUuid) throws BaseException {
-        taskService.close(taskUuid);
+    @PutMapping("/task/{taskUuid}/assignee")
+    public void assignee(@PathVariable UUID taskUuid, @RequestParam String email) throws BaseException {
+        taskService.assign(taskUuid, email);
     }
 
-    @PutMapping("/task/details")
-    public void updateTaskDetails(@RequestBody @Valid TaskDetailsDto newTaskDetails)
-            throws BaseException {
+    @PostMapping("/task/{taskUuid}/review")
+    public void reviewTask(@PathVariable UUID taskUuid, @RequestBody NewReviewDto newReview) throws BaseException {
+        taskService.reviewTask(
+                taskUuid,
+                newReview.getReviewerEmail(),
+                newReview.getComment(),
+                newReview.getRejected()
+        );
+    }
+
+    @PutMapping("/task/{taskUuid}/details")
+    public void updateTaskDetails(
+            @PathVariable UUID taskUuid,
+            @RequestBody @Valid TaskDetailsDto newTaskDetails
+    ) throws BaseException {
+
         taskService.updateTaskDetails(
-                newTaskDetails.getTaskUuid(),
+                taskUuid,
                 newTaskDetails.getName(),
                 newTaskDetails.getDescription(),
                 newTaskDetails.getDeadLine(),
@@ -59,19 +78,8 @@ public class TasksResources {
         );
     }
 
-    @PutMapping("/task/{taskUuid}/status/{status}")
-    public void changeStatus(@PathVariable UUID taskUuid, @PathVariable Status status)
-            throws BaseException {
+    @PutMapping("/task/{taskUuid}/status")
+    public void changeStatus(@PathVariable UUID taskUuid, @RequestParam Status status) throws BaseException {
         taskService.changeStatus(taskUuid, status);
-    }
-
-    @PutMapping("/task/review/comment")
-    public void updateReviewComment(@RequestBody @Valid UpdateReviewCommentDto newReviewComment)
-            throws NotFoundException {
-        taskService.updateReviewComment(
-                newReviewComment.getReviewUuid(),
-                newReviewComment.getComment()
-        );
-
     }
 }
