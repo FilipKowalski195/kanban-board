@@ -23,21 +23,23 @@ public class Project extends Base {
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     private Set<User> members;
 
-    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST})
     private List<Task> tasks;
 
     public Project() {
     }
 
-    public Project(UUID uuid, Instant createdAt, User leader) {
+    public Project(UUID uuid, String name, Instant createdAt, User leader) {
         super(uuid, createdAt);
+        this.name = name;
         this.leader = leader;
         this.members = new HashSet<>();
         this.tasks = new ArrayList<>();
     }
 
-    public Project(UUID uuid, Instant createdAt, User leader, Set<User> members, List<Task> tasks) {
+    public Project(UUID uuid, Instant createdAt, String name, User leader, Set<User> members, List<Task> tasks) {
         super(uuid, createdAt);
+        this.name = name;
         this.leader = leader;
         this.members = members;
         this.tasks = tasks;
@@ -61,6 +63,10 @@ public class Project extends Base {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name){
+        this.name = name;
     }
 
     public User getLeader() {

@@ -5,10 +5,9 @@ import org.springframework.stereotype.Service;
 import pl.lodz.zzpj.kanbanboard.entity.Review;
 import pl.lodz.zzpj.kanbanboard.entity.Task;
 import pl.lodz.zzpj.kanbanboard.entity.Task.Status;
-import pl.lodz.zzpj.kanbanboard.entity.TaskDetails;
 import pl.lodz.zzpj.kanbanboard.entity.TaskDetails.Difficulty;
 import pl.lodz.zzpj.kanbanboard.entity.User;
-import pl.lodz.zzpj.kanbanboard.exceptions.BadOperationException;
+import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.ConflictException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
 import pl.lodz.zzpj.kanbanboard.repository.ReviewsRepository;
@@ -19,7 +18,6 @@ import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class TaskService extends BaseService {
@@ -49,51 +47,19 @@ public class TaskService extends BaseService {
         return tasksRepository.findByUuid(taskUuid);
     }
 
-    public List<Task> getAll() {
-        return tasksRepository.findAll();
-    }
-
     public List<Task> getAllTasksCreatedBy(String userEmail) {
-        return getAll()
-                .stream()
-                .filter(task -> task.getCreator().getEmail().equals(userEmail))
-                .collect(Collectors.toList());
+        return tasksRepository.findAllByCreator_Email(userEmail);
     }
 
     public List<Task> getAllTaskAssignedTo(String userEmail) {
-        return getAll()
-                .stream()
-                .filter(task -> task.getAssignee().getEmail().equals(userEmail))
-                .collect(Collectors.toList());
+        return tasksRepository.findAllByAssignee_Email(userEmail);
     }
 
     // TODO
     // Maybe we should add some generic filters for Tasks
     // They may be useful at implementation of extended logic
 
-    public void add(String creatorEmail, String name, String description, Instant deadLine, Difficulty difficulty)
-            throws NotFoundException, BadOperationException {
-        var creator = getUserByEmailOrThrow(creatorEmail);
-
-        var newTaskDetails = new TaskDetails(name, description, deadLine, difficulty, new ArrayList<>());
-
-        catchingValidation(() -> taskDetailsRepository.save(newTaskDetails));
-
-        var newTask = new Task(UUID.randomUUID(), dateProvider.now(), creator, newTaskDetails);
-
-        catchingValidation(() -> tasksRepository.save(newTask));
-    }
-
-    public void assign(UUID taskUuid, String assigneeEmail) throws NotFoundException {
-        var assignee = getUserByEmailOrThrow(assigneeEmail);
-
-        var task = getTaskByUuidOrThrow(taskUuid);
-
-        task.setAssignee(assignee);
-        tasksRepository.save(task);
-    }
-
-    public void close(UUID taskUuid) throws NotFoundException, ConflictException {
+    public void close(UUID taskUuid) throws BaseException {
         var task = getTaskByUuidOrThrow(taskUuid);
 
         // Cannot close task if it is not DONE or CANCELED
@@ -106,7 +72,7 @@ public class TaskService extends BaseService {
 
     public void updateTaskDetails(
             UUID taskUuid, String name, String description, Instant deadLine, Difficulty difficulty)
-            throws NotFoundException, BadOperationException {
+            throws BaseException {
         var taskDetails = getTaskByUuidOrThrow(taskUuid).getDetails();
 
         taskDetails.setName(name);
@@ -116,7 +82,7 @@ public class TaskService extends BaseService {
         catchingValidation(() -> taskDetailsRepository.save(taskDetails));
     }
 
-    public void changeStatus(UUID taskUuid, Status newStatus) throws NotFoundException, ConflictException {
+    public void changeStatus(UUID taskUuid, Status newStatus) throws BaseException {
         var task = getTaskByUuidOrThrow(taskUuid);
 
         var taskReviews = task.getDetails().getReviews();
@@ -141,27 +107,6 @@ public class TaskService extends BaseService {
 
         task.setStatus(newStatus);
         tasksRepository.save(task);
-    }
-
-    public void addReview(UUID taskUuid, String reviewerEmail, String comment, boolean rejected)
-            throws BadOperationException, NotFoundException, ConflictException {
-        var task = getTaskByUuidOrThrow(taskUuid);
-
-        // Cannot add review to task that isn't TO_REVIEW
-        if (!Status.TO_REVIEW.equals(task.getStatus())) {
-            throw ConflictException.cannotAddReview(task);
-        }
-
-        var reviewer = getUserByEmailOrThrow(reviewerEmail);
-
-        var newReview = new Review(UUID.randomUUID(), dateProvider.now(), reviewer, comment, rejected);
-
-        catchingValidation(() -> reviewsRepository.save(newReview));
-
-        var taskDetails = task.getDetails();
-
-        taskDetails.getReviews().add(newReview);
-        taskDetailsRepository.save(taskDetails);
     }
 
     public void updateReviewComment(UUID reviewUuid, String newComment) throws NotFoundException {

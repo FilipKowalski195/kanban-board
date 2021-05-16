@@ -1,8 +1,10 @@
 package pl.lodz.zzpj.kanbanboard.exceptions;
 
+import pl.lodz.zzpj.kanbanboard.entity.Project;
 import pl.lodz.zzpj.kanbanboard.entity.Review;
 import pl.lodz.zzpj.kanbanboard.entity.Task;
 import pl.lodz.zzpj.kanbanboard.entity.Task.Status;
+import pl.lodz.zzpj.kanbanboard.entity.User;
 
 public class ConflictException extends BaseException {
     private static final String UNIQUE_CONFLICT_MSG = "%s could not be processed due to not unique %s = %s";
@@ -16,6 +18,8 @@ public class ConflictException extends BaseException {
     private static final String NO_REVIEW_CONFLICT_MSG = "Task (uuid: %s) status cannot be DONE because it is not reviewed";
 
     private static final String ADD_REVIEW_CONFLICT_MSG = "Review cannot be added to Task (uuid: %s) because its status is not TO_REVIEW";
+
+    private static final String NOT_MEMBER_OF_PROJECT_CONFLICT_MSG = "Creator %s of Task is not Project (uuid: %s) member";
 
     private ConflictException(String message) {
         super(message);
@@ -48,5 +52,9 @@ public class ConflictException extends BaseException {
 
     public static ConflictException cannotAddReview(Task task){
         return new ConflictException(String.format(ADD_REVIEW_CONFLICT_MSG, task.getUuid()));
+    }
+
+    public static ConflictException notMemberOfProject(User user, Project project){
+        return new ConflictException(String.format(NOT_MEMBER_OF_PROJECT_CONFLICT_MSG, user.getEmail(), project.getUuid()));
     }
 }

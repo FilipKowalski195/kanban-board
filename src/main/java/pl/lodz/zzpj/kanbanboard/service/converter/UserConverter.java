@@ -1,7 +1,7 @@
 package pl.lodz.zzpj.kanbanboard.service.converter;
 
-import pl.lodz.zzpj.kanbanboard.dto.NewUserDto;
-import pl.lodz.zzpj.kanbanboard.dto.UserDto;
+import pl.lodz.zzpj.kanbanboard.dto.user.NewUserDto;
+import pl.lodz.zzpj.kanbanboard.dto.user.UserDto;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 
 import java.time.Instant;
