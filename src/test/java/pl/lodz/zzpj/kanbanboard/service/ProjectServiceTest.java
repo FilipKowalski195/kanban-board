@@ -1,5 +1,6 @@
 package pl.lodz.zzpj.kanbanboard.service;
 
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -29,7 +31,7 @@ import static org.mockito.Mockito.when;
 class ProjectServiceTest {
 
     @Mock
-    ProjectsRepository projectRepository;
+    ProjectsRepository projectsRepository;
 
     @Mock
     UsersRepository usersRepository;
@@ -52,11 +54,11 @@ class ProjectServiceTest {
     final Instant defaultDate = Instant.ofEpochMilli(0);
 
     private void noMoreInteractions() {
-        verifyNoMoreInteractions(usersRepository, projectRepository, dateProvider);
+        verifyNoMoreInteractions(usersRepository, projectsRepository, dateProvider);
     }
 
     private void prepareProjectService() {
-        projectService = new ProjectService(projectRepository, usersRepository, dateProvider);
+        projectService = new ProjectService(projectsRepository, usersRepository, dateProvider);
     }
 
     @Test
@@ -65,7 +67,7 @@ class ProjectServiceTest {
 
         projectService.getAll();
 
-        verify(projectRepository).findAll();
+        verify(projectsRepository).findAll();
 
         noMoreInteractions();
     }
@@ -73,14 +75,14 @@ class ProjectServiceTest {
     @Test
     void getByUuid() {
 
-        when(projectRepository.findProjectByUuid(projectUuid))
+        when(projectsRepository.findProjectByUuid(projectUuid))
                 .thenReturn(Optional.of(defaultProject));
 
         prepareProjectService();
 
         projectService.getByUuid(projectUuid);
 
-        verify(projectRepository).findProjectByUuid(projectUuid);
+        verify(projectsRepository).findProjectByUuid(projectUuid);
     }
 
     @Test
@@ -121,7 +123,7 @@ class ProjectServiceTest {
 
         verify(usersRepository).findUserByEmail(defaultEmail);
         verify(dateProvider).now();
-        verify(projectRepository).save(ArgumentMatchers.argThat(projectMatcher));
+        verify(projectsRepository).save(ArgumentMatchers.argThat(projectMatcher));
 
         noMoreInteractions();
 
@@ -132,7 +134,7 @@ class ProjectServiceTest {
 
         UUID uuid = UUID.randomUUID();
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.empty());
 
         prepareProjectService();
@@ -140,7 +142,7 @@ class ProjectServiceTest {
         assertThatThrownBy(() -> projectService.addMember(uuid, defaultEmail))
                 .isInstanceOf(NotFoundException.class);
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
 
         noMoreInteractions();
 
@@ -154,7 +156,7 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(defaultEmail))
                 .thenReturn(Optional.empty());
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
         prepareProjectService();
@@ -175,16 +177,18 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(defaultEmail))
                 .thenReturn(Optional.of(defaultUser));
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
         prepareProjectService();
 
         projectService.addMember(uuid, defaultEmail);
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
         verify(usersRepository).findUserByEmail(defaultEmail);
-        verify(projectRepository).save(defaultProject);
+        verify(projectsRepository).save(defaultProject);
+
+        assertThat(defaultProject.getMembers()).isNotEmpty();
 
         noMoreInteractions();
     }
@@ -193,7 +197,7 @@ class ProjectServiceTest {
     void removeMember_projectDoesNotExist_ExceptionThrown() {
         UUID uuid = UUID.randomUUID();
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.empty());
 
         prepareProjectService();
@@ -201,7 +205,7 @@ class ProjectServiceTest {
         assertThatThrownBy(() -> projectService.removeMember(uuid, defaultEmail))
                 .isInstanceOf(NotFoundException.class);
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
 
         noMoreInteractions();
 
@@ -215,7 +219,7 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(defaultEmail))
                 .thenReturn(Optional.empty());
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
         prepareProjectService();
@@ -236,17 +240,24 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(defaultEmail))
                 .thenReturn(Optional.of(defaultUser));
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
+
+        defaultProject.addMember(defaultUser);
 
         prepareProjectService();
 
+        assertThat(defaultProject.getMembers()).hasSize(1);
+
         projectService.removeMember(uuid, defaultEmail);
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
         verify(usersRepository).findUserByEmail(defaultEmail);
 
-        verify(projectRepository).save(defaultProject);
+        verify(projectsRepository).save(defaultProject);
+
+        assertThat(defaultProject.getMembers()).isEmpty();
+
 
         noMoreInteractions();
     }
@@ -256,7 +267,7 @@ class ProjectServiceTest {
 
         UUID uuid = UUID.randomUUID();
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.empty());
 
         prepareProjectService();
@@ -265,7 +276,7 @@ class ProjectServiceTest {
                 () -> projectService.addTask(uuid, defaultEmail, "Test Task", "Test Description", Instant.now(), Difficulty.HIGH))
                 .isInstanceOf(NotFoundException.class);
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
 
         noMoreInteractions();
     }
@@ -278,7 +289,7 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(userNotExistEmail))
                 .thenReturn(Optional.empty());
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
         prepareProjectService();
@@ -300,10 +311,10 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(defaultEmail))
                 .thenReturn(Optional.of(defaultUser));
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
-        when(projectRepository.findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultUser))
+        when(projectsRepository.findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultUser))
                 .thenReturn(Optional.empty());
 
         prepareProjectService();
@@ -313,7 +324,7 @@ class ProjectServiceTest {
                 .isInstanceOf(ConflictException.class);
 
         verify(usersRepository).findUserByEmail(defaultEmail);
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
 
         noMoreInteractions();
     }
@@ -326,10 +337,10 @@ class ProjectServiceTest {
         when(usersRepository.findUserByEmail(leaderEmail))
                 .thenReturn(Optional.of(defaultLeader));
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
-        when(projectRepository.findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader))
+        when(projectsRepository.findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader))
                 .thenReturn(Optional.of(defaultProject));
 
         when(dateProvider.now())
@@ -340,11 +351,12 @@ class ProjectServiceTest {
         projectService.addTask(uuid, leaderEmail, "Test Task", "Test Description", Instant.now(), Difficulty.HIGH);
 
         verify(usersRepository).findUserByEmail(leaderEmail);
-        verify(projectRepository).findProjectByUuid(uuid);
-        verify(projectRepository).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader);
+        verify(projectsRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader);
         verify(dateProvider).now();
-        verify(projectRepository).save(defaultProject);
+        verify(projectsRepository).save(defaultProject);
 
+        assertThat(defaultProject.getTasks()).isNotEmpty();
         noMoreInteractions();
 
     }
@@ -354,7 +366,7 @@ class ProjectServiceTest {
 
         UUID uuid = UUID.randomUUID();
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.empty());
 
         prepareProjectService();
@@ -362,7 +374,7 @@ class ProjectServiceTest {
         assertThatThrownBy(() -> projectService.changeName(uuid, "New New Name"))
                 .isInstanceOf(NotFoundException.class);
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
 
         noMoreInteractions();
 
@@ -373,16 +385,20 @@ class ProjectServiceTest {
 
         UUID uuid = UUID.randomUUID();
 
-        when(projectRepository.findProjectByUuid(uuid))
+        when(projectsRepository.findProjectByUuid(uuid))
                 .thenReturn(Optional.of(defaultProject));
 
         prepareProjectService();
 
         projectService.changeName(uuid, "New New Name");
 
-        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectsRepository).findProjectByUuid(uuid);
 
-        verify(projectRepository).save(defaultProject);
+        verify(projectsRepository).save(defaultProject);
+
+        assertThat(defaultProject)
+                .extracting(Project::getName)
+                .isEqualTo("New New Name");
 
         noMoreInteractions();
 
