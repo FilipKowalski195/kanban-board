@@ -7,8 +7,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.lodz.zzpj.kanbanboard.entity.Project;
+import pl.lodz.zzpj.kanbanboard.entity.TaskDetails.Difficulty;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
+import pl.lodz.zzpj.kanbanboard.exceptions.ConflictException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
 import pl.lodz.zzpj.kanbanboard.repository.ProjectsRepository;
 import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
@@ -247,5 +249,142 @@ class ProjectServiceTest {
         verify(projectRepository).save(defaultProject);
 
         noMoreInteractions();
+    }
+
+    @Test
+    void addTask_projectDoesNotExist_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.empty());
+
+        prepareProjectService();
+
+        assertThatThrownBy(
+                () -> projectService.addTask(uuid, defaultEmail, "Test Task", "Test Description", Instant.now(), Difficulty.HIGH))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(projectRepository).findProjectByUuid(uuid);
+
+        noMoreInteractions();
+    }
+
+    @Test
+    void addTask_creatorDoesNotExist_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(userNotExistEmail))
+                .thenReturn(Optional.empty());
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        prepareProjectService();
+
+        assertThatThrownBy(
+                () -> projectService.addTask(uuid, userNotExistEmail, "Test Task", "Test Description", Instant.now(), Difficulty.HIGH))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(usersRepository).findUserByEmail(userNotExistEmail);
+
+        noMoreInteractions();
+    }
+
+    @Test
+    void addTask_creatorIsNotProjectMember_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(defaultEmail))
+                .thenReturn(Optional.of(defaultUser));
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        when(projectRepository.findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultUser))
+                .thenReturn(Optional.empty());
+
+        prepareProjectService();
+
+        assertThatThrownBy(
+                () -> projectService.addTask(uuid, defaultEmail, "Test Task", "Test Description", Instant.now(), Difficulty.HIGH))
+                .isInstanceOf(ConflictException.class);
+
+        verify(usersRepository).findUserByEmail(defaultEmail);
+        verify(projectRepository).findProjectByUuid(uuid);
+
+        noMoreInteractions();
+    }
+
+    @Test
+    void addTask_TaskAdded() throws BaseException {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(leaderEmail))
+                .thenReturn(Optional.of(defaultLeader));
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        when(projectRepository.findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader))
+                .thenReturn(Optional.of(defaultProject));
+
+        when(dateProvider.now())
+                .thenReturn(Instant.now());
+
+        prepareProjectService();
+
+        projectService.addTask(uuid, leaderEmail, "Test Task", "Test Description", Instant.now(), Difficulty.HIGH);
+
+        verify(usersRepository).findUserByEmail(leaderEmail);
+        verify(projectRepository).findProjectByUuid(uuid);
+        verify(projectRepository).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader);
+        verify(dateProvider).now();
+        verify(projectRepository).save(defaultProject);
+
+        noMoreInteractions();
+
+    }
+
+    @Test
+    void changeName_projectDoesNotExist_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.empty());
+
+        prepareProjectService();
+
+        assertThatThrownBy(() -> projectService.changeName(uuid, "New New Name"))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(projectRepository).findProjectByUuid(uuid);
+
+        noMoreInteractions();
+
+    }
+
+    @Test
+    void changeName_nameChanged() throws BaseException {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        prepareProjectService();
+
+        projectService.changeName(uuid, "New New Name");
+
+        verify(projectRepository).findProjectByUuid(uuid);
+
+        verify(projectRepository).save(defaultProject);
+
+        noMoreInteractions();
+
     }
 }
