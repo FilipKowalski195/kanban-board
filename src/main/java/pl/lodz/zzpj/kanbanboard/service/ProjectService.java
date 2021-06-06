@@ -71,6 +71,8 @@ public class ProjectService extends BaseService{
         var member = getUserByEmailOrThrow(memberEmail);
 
         project.removeMember(member.getUuid());
+
+        projectsRepository.save(project);
     }
 
     public void addTask(
