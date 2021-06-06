@@ -1,7 +1,6 @@
 package pl.lodz.zzpj.kanbanboard.service;
 
 import org.junit.jupiter.api.Test;
-
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
@@ -20,7 +19,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectServiceTest {
@@ -45,7 +46,7 @@ class ProjectServiceTest {
     final UUID projectUuid = UUID.randomUUID();
     final Project defaultProject = new Project(projectUuid, "Default Project", Instant.now(), defaultLeader);
 
-    final String userNotExistEmail =  "userNotExist@email.com";
+    final String userNotExistEmail = "userNotExist@email.com";
     final Instant defaultDate = Instant.ofEpochMilli(0);
 
     private void noMoreInteractions() {
@@ -112,9 +113,9 @@ class ProjectServiceTest {
 
         ArgumentMatcher<Project> projectMatcher =
                 (project) -> project.getLeader() == defaultUser &&
-                    project.getName().equals("New project") &&
-                    project.getMembers().contains(defaultUser) &&
-                    project.getMembers().size() == 1;
+                        project.getName().equals("New project") &&
+                        project.getMembers().contains(defaultUser) &&
+                        project.getMembers().size() == 1;
 
         verify(usersRepository).findUserByEmail(defaultEmail);
         verify(dateProvider).now();
@@ -124,4 +125,127 @@ class ProjectServiceTest {
 
     }
 
+    @Test
+    void addMember_projectDoesNotExist_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.empty());
+
+        prepareProjectService();
+
+        assertThatThrownBy(() -> projectService.addMember(uuid, defaultEmail))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(projectRepository).findProjectByUuid(uuid);
+
+        noMoreInteractions();
+
+    }
+
+    @Test
+    void addMember_userDoesNotExist_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(defaultEmail))
+                .thenReturn(Optional.empty());
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        prepareProjectService();
+
+        assertThatThrownBy(() -> projectService.addMember(uuid, defaultEmail))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(usersRepository).findUserByEmail(defaultEmail);
+
+        noMoreInteractions();
+    }
+
+    @Test
+    void addMember_memberAdded() throws BaseException {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(defaultEmail))
+                .thenReturn(Optional.of(defaultUser));
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        prepareProjectService();
+
+        projectService.addMember(uuid, defaultEmail);
+
+        verify(projectRepository).findProjectByUuid(uuid);
+        verify(usersRepository).findUserByEmail(defaultEmail);
+        verify(projectRepository).save(defaultProject);
+
+        noMoreInteractions();
+    }
+
+    @Test
+    void removeMember_projectDoesNotExist_ExceptionThrown() {
+        UUID uuid = UUID.randomUUID();
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.empty());
+
+        prepareProjectService();
+
+        assertThatThrownBy(() -> projectService.removeMember(uuid, defaultEmail))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(projectRepository).findProjectByUuid(uuid);
+
+        noMoreInteractions();
+
+    }
+
+    @Test
+    void removeMember_userDoesNotExist_ExceptionThrown() {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(defaultEmail))
+                .thenReturn(Optional.empty());
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        prepareProjectService();
+
+        assertThatThrownBy(() -> projectService.removeMember(uuid, defaultEmail))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(usersRepository).findUserByEmail(defaultEmail);
+
+        noMoreInteractions();
+    }
+
+    @Test
+    void removeMember_memberRemoved() throws BaseException {
+
+        UUID uuid = UUID.randomUUID();
+
+        when(usersRepository.findUserByEmail(defaultEmail))
+                .thenReturn(Optional.of(defaultUser));
+
+        when(projectRepository.findProjectByUuid(uuid))
+                .thenReturn(Optional.of(defaultProject));
+
+        prepareProjectService();
+
+        projectService.removeMember(uuid, defaultEmail);
+
+        verify(projectRepository).findProjectByUuid(uuid);
+        verify(usersRepository).findUserByEmail(defaultEmail);
+
+        verify(projectRepository).save(defaultProject);
+
+        noMoreInteractions();
+    }
 }
