@@ -66,7 +66,7 @@ public class UserService extends BaseService {
                 password
         );
 
-        user.getRoles().add(new Role(Role.USER));
+//        user.getRoles().add(new Role(Role.USER));
 
         catchingValidation(() -> usersRepository.save(user));
     }
