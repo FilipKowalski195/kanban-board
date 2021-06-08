@@ -5,6 +5,7 @@ import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -40,6 +41,19 @@ public class TaskDetails {
     private List<Review> reviews;
 
     public TaskDetails() {
+    }
+
+    public TaskDetails(
+            String name,
+            String description,
+            Instant deadLine,
+            Difficulty difficulty
+    ) {
+        this.name = name;
+        this.description = description;
+        this.deadLine = deadLine;
+        this.difficulty = difficulty;
+        this.reviews = new ArrayList<>();
     }
 
     public TaskDetails(
