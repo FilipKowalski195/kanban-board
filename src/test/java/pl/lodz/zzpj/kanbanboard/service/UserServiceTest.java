@@ -1,5 +1,6 @@
 package pl.lodz.zzpj.kanbanboard.service;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
@@ -16,11 +17,13 @@ import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
 import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -61,9 +64,15 @@ public class UserServiceTest {
 
     @Test
     void getAll() {
+        when(usersRepository.findAll())
+                .thenReturn(List.of(defaultUser));
+
         prepareUserService();
 
-        userService.getAll();
+        var users = userService.getAll();
+
+        assertEquals(users.size(), 1);
+        assertEquals(users.get(0), defaultUser);
 
         verify(usersRepository)
                 .findAll();
