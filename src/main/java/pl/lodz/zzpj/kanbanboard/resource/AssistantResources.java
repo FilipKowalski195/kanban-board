@@ -27,7 +27,7 @@ public class AssistantResources {
             @RequestParam("country") String country,
             @RequestParam("level") PackedVerifier.Level level
     ) {
-        return scheduleService.checkPeriod(start, end, level, "PL")
+        return scheduleService.checkPeriod(start, end, level, country)
                 .stream()
                 .map(ad -> new ScheduleAdviceDto(ad.getType(), ad.getTrigger(), ad.getTriggerType()))
                 .collect(Collectors.toList());
