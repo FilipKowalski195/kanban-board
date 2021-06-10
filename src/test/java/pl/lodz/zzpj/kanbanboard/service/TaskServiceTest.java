@@ -20,6 +20,8 @@ import pl.lodz.zzpj.kanbanboard.repository.UsersRepository;
 import pl.lodz.zzpj.kanbanboard.utils.DateProvider;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,30 +73,57 @@ public class TaskServiceTest {
     }
 
     @Test
-    void getAllTaskAssignedTo_TasksExtracted() {
+    void getAllTaskAssignedTo_EmptyTasksListExtracted() {
+        List<Task> tasks = new ArrayList<>();
+        when(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()))
+                .thenReturn(tasks);
+
         prepareTaskService();
 
-        taskService.getAllTaskAssignedTo(defaultUser.getEmail());
+        assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isEqualTo(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()));
+        assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isEmpty();
+    }
 
-        verify(tasksRepository).findAllByAssignee_Email(defaultUser.getEmail());
+    @Test
+    void getAllTaskAssignedTo_TasksExtracted() {
+        List<Task> tasks = new ArrayList<>();
+        tasks.add(defaultTask);
+        when(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()))
+                .thenReturn(tasks);
 
-        noMoreInteractions();
+        prepareTaskService();
+
+        assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isEqualTo(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()));
+        assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isNotEmpty();
+    }
+
+    @Test
+    void getAllTasksCreatedBy_EmptyTasksListExtracted() {
+        List<Task> tasks = new ArrayList<>();
+        when(tasksRepository.findAllByCreator_Email(defaultLeader.getEmail()))
+                .thenReturn(tasks);
+
+        prepareTaskService();
+
+        assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isEqualTo(tasksRepository.findAllByCreator_Email(defaultLeader.getEmail()));
+        assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isEmpty();
     }
 
     @Test
     void getAllTasksCreatedBy_TasksExtracted() {
+        List<Task> tasks = new ArrayList<>();
+        tasks.add(defaultTask);
+        when(tasksRepository.findAllByCreator_Email(defaultLeader.getEmail()))
+                .thenReturn(tasks);
+
         prepareTaskService();
 
-        taskService.getAllTasksCreatedBy(defaultLeader.getEmail());
-
-        verify(tasksRepository).findAllByCreator_Email(defaultLeader.getEmail());
-
-        noMoreInteractions();
+        assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isEqualTo(tasksRepository.findAllByCreator_Email(defaultLeader.getEmail()));
+        assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isNotEmpty();
     }
 
     @Test
     void getTaskByUUID_taskExist_TaskExtracted() throws NotFoundException {
-
         when(tasksRepository.findByUuid(taskUUID))
                 .thenReturn(Optional.of(defaultTask));
 
@@ -102,9 +131,16 @@ public class TaskServiceTest {
 
         taskService.getTaskByUUID(taskUUID);
 
-        verify(tasksRepository).findByUuid(taskUUID);
-
         noMoreInteractions();
+    }
+
+    @Test
+    void getTaskByUUID_taskDoestNotExist_ExceptionThrown() {
+
+        prepareTaskService();
+
+        assertThatThrownBy(() ->  taskService.getTaskByUUID(taskUUID))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
@@ -119,15 +155,12 @@ public class TaskServiceTest {
         taskService.updateTaskDetails(taskUUID, "Default Task", newDescription, Instant.MAX, Difficulty.MEDIUM);
 
         assertThat(defaultTask.getDetails().getDescription()).isEqualTo(newDescription);
-
-        verify(tasksRepository).findByUuid(taskUUID);
     }
 
     @Test
     void updateTaskDetails_taskDoesNotExist_ExceptionThrown() {
 
         when((tasksRepository.findByUuid(taskUUID))).thenReturn(Optional.empty());
-        ;
 
         prepareTaskService();
 
@@ -135,8 +168,6 @@ public class TaskServiceTest {
 
         assertThatThrownBy(() -> taskService.updateTaskDetails(taskUUID, "Default Task", newDescription, Instant.MAX, Difficulty.MEDIUM))
                 .isInstanceOf(NotFoundException.class);
-
-        verify(tasksRepository).findByUuid(taskUUID);
 
         noMoreInteractions();
     }
@@ -156,8 +187,6 @@ public class TaskServiceTest {
 
         taskService.changeStatus(taskUUID, Status.DONE);
 
-        verify(tasksRepository).findByUuid(taskUUID);
-
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.DONE);
 
     }
@@ -176,8 +205,6 @@ public class TaskServiceTest {
         assertThatThrownBy(() -> taskService.changeStatus(taskUUID, Status.DONE)).isInstanceOf(
                 ConflictException.class
         );
-
-        verify(tasksRepository).findByUuid(taskUUID);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.TO_REVIEW);
 
@@ -201,8 +228,6 @@ public class TaskServiceTest {
                 ConflictException.class
         );
 
-        verify(tasksRepository).findByUuid(taskUUID);
-
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.TO_REVIEW);
 
         noMoreInteractions();
@@ -223,8 +248,6 @@ public class TaskServiceTest {
                 ConflictException.class
         );
 
-        verify(tasksRepository).findByUuid(taskUUID);
-
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.TODO);
     }
 
@@ -238,8 +261,6 @@ public class TaskServiceTest {
         prepareTaskService();
 
         taskService.changeStatus(taskUUID, Status.CANCELED);
-
-        verify(tasksRepository).findByUuid(taskUUID);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.CANCELED);
     }
@@ -259,8 +280,6 @@ public class TaskServiceTest {
         prepareTaskService();
 
         taskService.assign(taskUUID, defaultEmail);
-
-        verify(tasksRepository).findByUuid(taskUUID);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getAssignee()).isEqualTo(defaultUser);
     }
@@ -282,8 +301,6 @@ public class TaskServiceTest {
         assertThatThrownBy(() -> taskService.assign(taskUUID, defaultEmail)).isInstanceOf(
                 ConflictException.class
         );
-
-        verify(tasksRepository).findByUuid(taskUUID);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getAssignee()).isEqualTo(null);
     }
@@ -314,8 +331,6 @@ public class TaskServiceTest {
                 ConflictException.class
         );
 
-        verify(tasksRepository).findByUuid(taskUUID);
-
         assertThat(taskService.getAllTaskAssignedTo(defaultEmail)).isEmpty();
     }
 
@@ -337,8 +352,6 @@ public class TaskServiceTest {
 
         taskService.reviewTask(taskUUID, leaderEmail, "Just a comment", false);
 
-        verify(tasksRepository).findByUuid(taskUUID);
-
         assertThat(taskService.getTaskByUUID(taskUUID).getDetails().getReviews()).isNotEmpty();
     }
 
@@ -352,8 +365,6 @@ public class TaskServiceTest {
         assertThatThrownBy(() -> taskService.reviewTask(taskUUID, leaderEmail, "Just a comment", false)).isInstanceOf(
                 ConflictException.class
         );
-
-        verify(tasksRepository).findByUuid(taskUUID);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getDetails().getReviews()).isEmpty();
     }
