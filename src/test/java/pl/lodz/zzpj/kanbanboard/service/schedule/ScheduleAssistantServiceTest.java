@@ -10,6 +10,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.lodz.zzpj.kanbanboard.remote.HolidayApi;
 import pl.lodz.zzpj.kanbanboard.remote.data.Holiday;
+import pl.lodz.zzpj.kanbanboard.service.schedule.advices.ScheduleAlert;
 import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifier.Level;
 import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifiersFactory;
 import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.ScheduleVerifier;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,12 +94,16 @@ class ScheduleAssistantServiceTest {
 
         var verifier = Mockito.mock(ScheduleVerifier.class);
 
+        var alertList = List.of(ScheduleAlert.shortPeriod(Set.of(LocalDate.of(2018, 11, 17))));
         when(factory.pack(eq(level), any())).thenReturn(verifier);
-        when(verifier.verify(any(), any())).thenReturn(List.of());
+        when(verifier.verify(any(), any())).thenReturn(alertList);
 
         prepareAssistant();
 
-        scheduleAssistantService.checkPeriod(startDate, endDate, level, country);
+
+        var actual =  scheduleAssistantService.checkPeriod(startDate, endDate, level, country);
+
+        assertThat(actual).isEqualTo(alertList);
 
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
 
@@ -106,8 +112,10 @@ class ScheduleAssistantServiceTest {
         var holidaysDates = Stream.of(holidays.get(0)).map(Holiday::getDate).collect(Collectors.toList());
         ArgumentMatcher<List<LocalDate>> holidaysMatcher = (list) -> list.containsAll(holidaysDates);
         verify(factory).pack(eq(level), ArgumentMatchers.argThat(holidaysMatcher));
+        verify(verifier).verify(startDate, endDate);
 
         noMoreInteractions();
+
     }
 
     @Test
@@ -128,6 +136,7 @@ class ScheduleAssistantServiceTest {
 
         var verifier = Mockito.mock(ScheduleVerifier.class);
 
+
         when(factory.pack(eq(level), any())).thenReturn(verifier);
         when(verifier.verify(any(), any())).thenReturn(List.of());
 
@@ -144,6 +153,9 @@ class ScheduleAssistantServiceTest {
         var holidaysDates = holidays.stream().map(Holiday::getDate).collect(Collectors.toList());
         ArgumentMatcher<List<LocalDate>> holidaysMatcher = (list) -> list.containsAll(holidaysDates);
         verify(factory).pack(eq(level), ArgumentMatchers.argThat(holidaysMatcher));
+        verify(verifier).verify(startDate, endDate);
+
+        noMoreInteractions();
     }
 
 }
