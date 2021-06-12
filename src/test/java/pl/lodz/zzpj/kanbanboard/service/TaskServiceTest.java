@@ -3,6 +3,7 @@ package pl.lodz.zzpj.kanbanboard.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.lodz.zzpj.kanbanboard.entity.Project;
 import pl.lodz.zzpj.kanbanboard.entity.Review;
@@ -75,13 +76,17 @@ public class TaskServiceTest {
     @Test
     void getAllTaskAssignedTo_EmptyTasksListExtracted() {
         List<Task> tasks = new ArrayList<>();
+
         when(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()))
                 .thenReturn(tasks);
 
         prepareTaskService();
 
-        assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isEqualTo(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()));
         assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isEmpty();
+
+        verify(tasksRepository).findAllByAssignee_Email(defaultEmail);
+
+        noMoreInteractions();
     }
 
     @Test
@@ -93,8 +98,12 @@ public class TaskServiceTest {
 
         prepareTaskService();
 
-        assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isEqualTo(tasksRepository.findAllByAssignee_Email(defaultUser.getEmail()));
         assertThat(taskService.getAllTaskAssignedTo(defaultUser.getEmail())).isNotEmpty();
+
+        verify(tasksRepository).findAllByAssignee_Email(defaultEmail);
+
+        noMoreInteractions();
+
     }
 
     @Test
@@ -105,8 +114,11 @@ public class TaskServiceTest {
 
         prepareTaskService();
 
-        assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isEqualTo(tasksRepository.findAllByCreator_Email(defaultLeader.getEmail()));
         assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isEmpty();
+
+        verify(tasksRepository).findAllByCreator_Email(leaderEmail);
+
+        noMoreInteractions();
     }
 
     @Test
@@ -118,8 +130,11 @@ public class TaskServiceTest {
 
         prepareTaskService();
 
-        assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isEqualTo(tasksRepository.findAllByCreator_Email(defaultLeader.getEmail()));
         assertThat(taskService.getAllTasksCreatedBy(defaultLeader.getEmail())).isNotEmpty();
+
+        verify(tasksRepository).findAllByCreator_Email(leaderEmail);
+
+        noMoreInteractions();
     }
 
     @Test
@@ -131,16 +146,21 @@ public class TaskServiceTest {
 
         taskService.getTaskByUUID(taskUUID);
 
+        verify(tasksRepository).findByUuid(taskUUID);
+
         noMoreInteractions();
     }
 
     @Test
     void getTaskByUUID_taskDoestNotExist_ExceptionThrown() {
-
         prepareTaskService();
 
         assertThatThrownBy(() ->  taskService.getTaskByUUID(taskUUID))
                 .isInstanceOf(NotFoundException.class);
+
+        verify(tasksRepository).findByUuid(taskUUID);
+
+        noMoreInteractions();
     }
 
     @Test
@@ -155,6 +175,9 @@ public class TaskServiceTest {
         taskService.updateTaskDetails(taskUUID, "Default Task", newDescription, Instant.MAX, Difficulty.MEDIUM);
 
         assertThat(defaultTask.getDetails().getDescription()).isEqualTo(newDescription);
+
+        verify(tasksRepository).findByUuid(taskUUID);
+
     }
 
     @Test
@@ -170,6 +193,8 @@ public class TaskServiceTest {
                 .isInstanceOf(NotFoundException.class);
 
         noMoreInteractions();
+
+        verify(tasksRepository).findByUuid(taskUUID);
     }
 
     @Test
@@ -189,6 +214,7 @@ public class TaskServiceTest {
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.DONE);
 
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
     }
 
     @Test
@@ -208,7 +234,7 @@ public class TaskServiceTest {
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.TO_REVIEW);
 
-        noMoreInteractions();
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
     }
 
     @Test
@@ -230,6 +256,8 @@ public class TaskServiceTest {
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.TO_REVIEW);
 
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
+
         noMoreInteractions();
     }
 
@@ -249,6 +277,8 @@ public class TaskServiceTest {
         );
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.TODO);
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
     }
 
     @Test
@@ -263,6 +293,8 @@ public class TaskServiceTest {
         taskService.changeStatus(taskUUID, Status.CANCELED);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getStatus()).isEqualTo(Status.CANCELED);
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
     }
 
     @Test
@@ -282,6 +314,15 @@ public class TaskServiceTest {
         taskService.assign(taskUUID, defaultEmail);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getAssignee()).isEqualTo(defaultUser);
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
+
+        verify(usersRepository, VerificationModeFactory.times(1)).findUserByEmail(defaultEmail);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByTasksContains(defaultTask);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultUser);
+
     }
 
     @Test
@@ -303,6 +344,14 @@ public class TaskServiceTest {
         );
 
         assertThat(taskService.getTaskByUUID(taskUUID).getAssignee()).isEqualTo(null);
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
+
+        verify(usersRepository, VerificationModeFactory.times(1)).findUserByEmail(defaultEmail);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByTasksContains(defaultTask);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultUser);
     }
 
     @Test
@@ -317,6 +366,8 @@ public class TaskServiceTest {
         );
 
         assertThat(taskService.getAllTaskAssignedTo(defaultEmail)).isEmpty();
+
+        verify(tasksRepository, VerificationModeFactory.times(1)).findByUuid(taskUUID);
     }
 
     @Test
@@ -332,6 +383,8 @@ public class TaskServiceTest {
         );
 
         assertThat(taskService.getAllTaskAssignedTo(defaultEmail)).isEmpty();
+
+        verify(tasksRepository, VerificationModeFactory.times(1)).findByUuid(taskUUID);
     }
 
     @Test
@@ -353,6 +406,14 @@ public class TaskServiceTest {
         taskService.reviewTask(taskUUID, leaderEmail, "Just a comment", false);
 
         assertThat(taskService.getTaskByUUID(taskUUID).getDetails().getReviews()).isNotEmpty();
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
+
+        verify(usersRepository, VerificationModeFactory.times(1)).findUserByEmail(leaderEmail);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByTasksContains(defaultTask);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader);
     }
 
     @Test
@@ -367,6 +428,9 @@ public class TaskServiceTest {
         );
 
         assertThat(taskService.getTaskByUUID(taskUUID).getDetails().getReviews()).isEmpty();
+
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
     }
 
     @Test
@@ -379,10 +443,12 @@ public class TaskServiceTest {
         assertThatThrownBy(() -> taskService.reviewTask(taskUUID, leaderEmail, "Just a comment", false)).isInstanceOf(
                 BaseException.class
         );
+
+        verify(tasksRepository, VerificationModeFactory.times(1)).findByUuid(taskUUID);
     }
 
     @Test
-    void reviewTask_ReviewerDoesntExist_TaskReviewed() {
+    void reviewTask_ReviewerDoesntExist_ExceptionThrown() {
 
         defaultTask.setStatus(Status.TO_REVIEW);
 
@@ -395,10 +461,14 @@ public class TaskServiceTest {
         assertThatThrownBy(() -> taskService.reviewTask(taskUUID, leaderEmail, "Just a comment", false)).isInstanceOf(
                 BaseException.class
         );
+
+        verify(tasksRepository, VerificationModeFactory.times(1)).findByUuid(taskUUID);
+
+        verify(usersRepository, VerificationModeFactory.times(1)).findUserByEmail(leaderEmail);
     }
 
     @Test
-    void reviewTask_TaskAndReviewerExistsNotInProject_TaskReviewed() throws BaseException {
+    void reviewTask_TaskAndReviewerExistsNotInProject_ExceptionThrown() throws BaseException {
 
         defaultTask.setStatus(Status.TO_REVIEW);
 
@@ -418,5 +488,13 @@ public class TaskServiceTest {
         );
 
         assertThat(taskService.getTaskByUUID(taskUUID).getDetails().getReviews()).isEmpty();
+
+        verify(tasksRepository, VerificationModeFactory.times(2)).findByUuid(taskUUID);
+
+        verify(usersRepository, VerificationModeFactory.times(1)).findUserByEmail(leaderEmail);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByTasksContains(defaultTask);
+
+        verify(projectsRepository, VerificationModeFactory.times(1)).findProjectByUuidAndMembersContains(defaultProject.getUuid(), defaultLeader);
     }
 }
