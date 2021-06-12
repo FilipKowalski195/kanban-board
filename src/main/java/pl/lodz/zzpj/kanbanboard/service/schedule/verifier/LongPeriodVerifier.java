@@ -18,9 +18,6 @@ public class LongPeriodVerifier implements ScheduleVerifier {
     @Override
     public List<ScheduleAlert> verify(LocalDate start, LocalDate end) {
         if (ChronoUnit.DAYS.between(start, end) >= threshold) {
-            if (start.equals(end)) {
-                return List.of(ScheduleAlert.longPeriod(Set.of(start)));
-            }
             return List.of(ScheduleAlert.longPeriod(Set.of(start, end)));
         }
         return List.of();

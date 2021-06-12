@@ -9,8 +9,8 @@ import java.time.LocalDate;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("unchecked")
 class ShortPeriodVerifierTest {
 
     @Test
@@ -36,11 +36,17 @@ class ShortPeriodVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.SHORT_PERIOD);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.SHORT_PERIOD);
 
-        assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.RANGE);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTriggerType)
+                .contains(Trigger.RANGE);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).containsExactly(Set.of(start, end));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .containsExactly(Set.of(start, end));
     }
 
     @Test
@@ -53,10 +59,16 @@ class ShortPeriodVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.SHORT_PERIOD);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.SHORT_PERIOD);
 
-        assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.RANGE);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTriggerType)
+                .contains(Trigger.RANGE);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).containsExactly(Set.of(start));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .containsExactly(Set.of(start));
     }
 }

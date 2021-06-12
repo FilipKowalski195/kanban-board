@@ -12,6 +12,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("unchecked")
 class HolidaysVerifierTest {
 
     private final List<LocalDate> holidays = List.of(
@@ -42,10 +43,16 @@ class HolidaysVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.HOLIDAYS);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.HOLIDAYS);
 
-        assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.DAYS);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTriggerType)
+                .contains(Trigger.DAYS);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).contains(Set.of(LocalDate.of(2021,6,11)));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .contains(Set.of(LocalDate.of(2021,6,11)));
     }
 }

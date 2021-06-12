@@ -42,8 +42,24 @@ class ScheduleAssistantServiceTest {
     private ScheduleAssistantService scheduleAssistantService;
 
     private final List<Holiday> holidays = List.of(
-            new Holiday(LocalDate.of(2020, 1, 2), "3 Króli", "3 Króli", "PL", true, true, "XD"),
-            new Holiday(LocalDate.of(2020, 1, 5), "3 Króli", "3 Króli", "PL", true, true, "XD")
+            new Holiday(
+                    LocalDate.of(2020, 1, 2),
+                    "3 Króli",
+                    "3 Króli",
+                    "PL",
+                    true,
+                    true,
+                    "XD"
+            ),
+            new Holiday(
+                    LocalDate.of(2020, 1, 5),
+                    "3 Króli",
+                    "3 Króli",
+                    "PL",
+                    true,
+                    true,
+                    "XD"
+            )
     );
 
     void prepareAssistant() {
@@ -100,7 +116,6 @@ class ScheduleAssistantServiceTest {
 
         prepareAssistant();
 
-
         var actual =  scheduleAssistantService.checkPeriod(startDate, endDate, level, country);
 
         assertThat(actual).isEqualTo(alertList);
@@ -119,7 +134,7 @@ class ScheduleAssistantServiceTest {
     }
 
     @Test
-    void checkPeriod_diffrentYears() {
+    void checkPeriod_differentYears() {
 
         var startDate = LocalDate.of(2019, 12, 30);
         var endDate = LocalDate.of(2020, 1, 15);

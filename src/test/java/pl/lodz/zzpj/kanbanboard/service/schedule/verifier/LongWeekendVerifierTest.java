@@ -1,7 +1,6 @@
 package pl.lodz.zzpj.kanbanboard.service.schedule.verifier;
 
 import org.junit.jupiter.api.Test;
-import pl.lodz.zzpj.kanbanboard.remote.data.Holiday;
 import pl.lodz.zzpj.kanbanboard.service.schedule.advices.ScheduleAlert;
 import pl.lodz.zzpj.kanbanboard.service.schedule.advices.ScheduleAlert.Trigger;
 import pl.lodz.zzpj.kanbanboard.service.schedule.advices.ScheduleAlert.Type;
@@ -11,14 +10,15 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("unchecked")
 class LongWeekendVerifierTest {
 
     private final List<LocalDate> holidays = List.of(
-            LocalDate.of(2021,6,11),
-            LocalDate.of(2021,7,8)
-            );
+            LocalDate.of(2021, 6, 11),
+            LocalDate.of(2021, 7, 8)
+    );
+
     @Test
     void verify_NoLongWeekend() {
 
@@ -30,7 +30,6 @@ class LongWeekendVerifierTest {
         var actual = verifier.verify(start, end);
 
         assertThat(actual).isEmpty();
-
     }
 
     @Test
@@ -47,11 +46,13 @@ class LongWeekendVerifierTest {
 
         assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.DAYS);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).containsExactly(Set.of(
-                LocalDate.of(2021,6,11),
-                LocalDate.of(2021,6,12),
-                LocalDate.of(2021,6,13)
-        ));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .containsExactly(Set.of(
+                        LocalDate.of(2021, 6, 11),
+                        LocalDate.of(2021, 6, 12),
+                        LocalDate.of(2021, 6, 13)
+                ));
     }
 
     @Test
@@ -78,15 +79,21 @@ class LongWeekendVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.SOFT_LONG_WEEKEND);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.SOFT_LONG_WEEKEND);
 
-        assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.DAYS);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTriggerType)
+                .contains(Trigger.DAYS);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).containsExactly(Set.of(
-                LocalDate.of(2021,7,8),
-                LocalDate.of(2021,7,9),
-                LocalDate.of(2021,7,10),
-                LocalDate.of(2021,7,11)
-        ));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .containsExactly(Set.of(
+                        LocalDate.of(2021, 7, 8),
+                        LocalDate.of(2021, 7, 9),
+                        LocalDate.of(2021, 7, 10),
+                        LocalDate.of(2021, 7, 11)
+                ));
     }
 }

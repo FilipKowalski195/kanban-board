@@ -10,6 +10,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("unchecked")
 class LongPeriodVerifierTest {
 
     @Test
@@ -22,7 +23,8 @@ class LongPeriodVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).isEmpty();
+        assertThat(actual)
+                .isEmpty();
     }
 
     @Test
@@ -35,11 +37,17 @@ class LongPeriodVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.LONG_PERIOD);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.LONG_PERIOD);
 
-        assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.RANGE);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTriggerType)
+                .contains(Trigger.RANGE);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).containsExactly(Set.of(start, end));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .containsExactly(Set.of(start, end));
     }
 
 }

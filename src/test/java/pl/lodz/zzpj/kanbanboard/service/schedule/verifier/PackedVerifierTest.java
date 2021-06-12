@@ -15,6 +15,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 class PackedVerifierTest {
 
@@ -66,10 +67,10 @@ class PackedVerifierTest {
         when(longPeriodVerifier.verify(start, end)).thenReturn(longPeriodList);
 
         var actual = PackedVerifier.init()
-                                            .with(weekendVerifier)
-                                            .with(longWeekendVerifier)
-                                            .with(longPeriodVerifier)
-                                            .verify(start, end);
+                .with(weekendVerifier)
+                .with(longWeekendVerifier)
+                .with(longPeriodVerifier)
+                .verify(start, end);
 
         assertThat(actual)
                 .extracting(ScheduleAlert::getType)

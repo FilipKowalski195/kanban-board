@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 
+@SuppressWarnings("unchecked")
 class WeekendVerifierTest {
 
     @Test
@@ -26,7 +27,6 @@ class WeekendVerifierTest {
         var actual = verifier.verify(start, end);
 
         assertThat(actual).isEmpty();
-
     }
 
     @Test
@@ -39,9 +39,16 @@ class WeekendVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.WEEKEND);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.WEEKEND);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).contains(Set.of(LocalDate.of(2021, 8, 7), LocalDate.of(2021, 8, 8)));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .contains(Set.of(
+                        LocalDate.of(2021, 8, 7),
+                        LocalDate.of(2021, 8, 8)
+                ));
 
         assertThat(actual).extracting(ScheduleAlert::getTriggerType).containsExactly(Trigger.DAYS);
     }
@@ -58,9 +65,10 @@ class WeekendVerifierTest {
 
         assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.WEEKEND);
 
-        assertThat(actual).extracting(ScheduleAlert::getTrigger).containsExactly(Set.of(LocalDate.of(2021, 8, 7)));
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTrigger)
+                .containsExactly(Set.of(LocalDate.of(2021, 8, 7)));
 
         assertThat(actual).extracting(ScheduleAlert::getTriggerType).containsExactly(Trigger.DAYS);
-
     }
 }
