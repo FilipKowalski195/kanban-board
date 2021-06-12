@@ -9,7 +9,10 @@ import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifier;
 import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifiersFactory;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,6 +25,7 @@ public class ScheduleAssistantService {
     private final HolidayApi holidayApi;
     private final PackedVerifiersFactory factory;
 
+    private final static int MAX_PERIOD = 40;
     @Autowired
     public ScheduleAssistantService(
             HolidayApi holidayApi,
@@ -33,6 +37,8 @@ public class ScheduleAssistantService {
 
     public List<ScheduleAlert> checkPeriod(LocalDate start, LocalDate end, PackedVerifier.Level level,  String country) {
         checkArgument(!end.isBefore(start), "Invalid period! Start date must be before end date!");
+        var period = ChronoUnit.DAYS.between(start, end);
+        checkArgument(period <= MAX_PERIOD, "Invalid period! Max difference between days is " + MAX_PERIOD + ". Actual: "+ period);
 
         var holidaysCalls = Stream.of(start.getYear(), end.getYear())
                 .map(String::valueOf)

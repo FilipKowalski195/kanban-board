@@ -62,15 +62,16 @@ class ProjectServiceTest {
     }
 
     @Test
-    void getAll() {
+    void getAll_isEmpty() {
         prepareProjectService();
 
-        projectService.getAll();
+        assertThat(projectService.getAll()).isEmpty();
 
         verify(projectsRepository).findAll();
 
         noMoreInteractions();
     }
+
 
     @Test
     void getByUuid() {
