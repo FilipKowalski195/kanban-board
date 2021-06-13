@@ -12,5 +12,6 @@ public class NewProjectDto {
     String name;
 
     @Email
+    @NotBlank
     String leaderEmail;
 }

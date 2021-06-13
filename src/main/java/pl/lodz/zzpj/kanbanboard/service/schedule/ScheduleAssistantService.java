@@ -9,9 +9,7 @@ import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifier;
 import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifiersFactory;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,7 +23,7 @@ public class ScheduleAssistantService {
     private final HolidayApi holidayApi;
     private final PackedVerifiersFactory factory;
 
-    private final static int MAX_PERIOD = 40;
+    private static final int MAX_PERIOD = 40;
     @Autowired
     public ScheduleAssistantService(
             HolidayApi holidayApi,
