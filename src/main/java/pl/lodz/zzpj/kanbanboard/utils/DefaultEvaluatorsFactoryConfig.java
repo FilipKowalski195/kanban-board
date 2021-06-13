@@ -16,11 +16,6 @@ public class DefaultEvaluatorsFactoryConfig {
             Difficulty.MEDIUM, 1.0,
             Difficulty.HIGH, 1.5
     );
-    private final Map<Difficulty, Long> difficultyTimeEstimations = Map.of(
-            Difficulty.LOW, 1L,
-            Difficulty.MEDIUM, 3L,
-            Difficulty.HIGH, 5L
-    );
 
     @Bean
     public EvaluatorsFactory defaultEvaluatorsFactory(
@@ -28,8 +23,7 @@ public class DefaultEvaluatorsFactoryConfig {
     ) {
         return new DefaultEvaluatorsFactory(
                 provider,
-                difficultyCoefficients,
-                difficultyTimeEstimations
+                difficultyCoefficients
         );
     }
 }

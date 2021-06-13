@@ -12,7 +12,6 @@ import pl.lodz.zzpj.kanbanboard.entity.User;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,12 +19,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
 class PunctualityTaskEvaluatorTest {
-
-    Map<Difficulty, Long> difficultyTimeEstimations = Map.of(
-            Difficulty.LOW, 2L,
-            Difficulty.MEDIUM, 4L,
-            Difficulty.HIGH, 6L
-    );
 
     PunctualityTaskEvaluator evaluator;
 
@@ -60,7 +53,7 @@ class PunctualityTaskEvaluatorTest {
     Task notClosedTask = new Task(UUID.randomUUID(), getDate(0), user, Status.IN_PROGRESS, null, taskDetailsHard);
 
     void init() {
-        evaluator = new PunctualityTaskEvaluator(difficultyTimeEstimations);
+        evaluator = new PunctualityTaskEvaluator();
     }
 
     @Test
