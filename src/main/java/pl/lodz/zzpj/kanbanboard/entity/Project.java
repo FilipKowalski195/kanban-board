@@ -37,7 +37,7 @@ public class Project extends Base {
         this.tasks = new ArrayList<>();
     }
 
-    public Project(UUID uuid, Instant createdAt, String name, User leader, Set<User> members, List<Task> tasks) {
+    public Project(UUID uuid, String name, Instant createdAt, User leader, Set<User> members, List<Task> tasks) {
         super(uuid, createdAt);
         this.name = name;
         this.leader = leader;
