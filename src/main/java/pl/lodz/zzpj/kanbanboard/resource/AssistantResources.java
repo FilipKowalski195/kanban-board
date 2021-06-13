@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import pl.lodz.zzpj.kanbanboard.dto.evaluation.UserEvaluationDto;
 import pl.lodz.zzpj.kanbanboard.dto.schedule.ScheduleAdviceDto;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.service.evaluation.UsersEvaluationService;
-import pl.lodz.zzpj.kanbanboard.service.evaluation.evaluators.UserEvaluation;
 import pl.lodz.zzpj.kanbanboard.service.evaluation.evaluators.UsersEvaluator.Metric;
 import pl.lodz.zzpj.kanbanboard.service.schedule.ScheduleAssistantService;
 import pl.lodz.zzpj.kanbanboard.service.schedule.verifier.PackedVerifier;
@@ -48,10 +48,13 @@ public class AssistantResources {
     }
 
     @GetMapping("/projects/{projectId}/evaluate")
-    public List<UserEvaluation> evaluate(
+    public List<UserEvaluationDto> evaluate(
             @PathVariable UUID projectId,
             @RequestParam("metric") Metric metric
     ) throws BaseException {
-        return evaluationService.evaluateProjectMembers(projectId, metric);
+        return evaluationService.evaluateProjectMembers(projectId, metric)
+                .stream()
+                .map(UserEvaluationDto::new)
+                .collect(Collectors.toList());
     }
 }

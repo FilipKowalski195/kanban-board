@@ -3,9 +3,11 @@ package pl.lodz.zzpj.kanbanboard.service.evaluation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.lodz.zzpj.kanbanboard.entity.Project;
+import pl.lodz.zzpj.kanbanboard.entity.Task.Status;
 import pl.lodz.zzpj.kanbanboard.exceptions.BaseException;
 import pl.lodz.zzpj.kanbanboard.exceptions.NotFoundException;
 import pl.lodz.zzpj.kanbanboard.repository.ProjectsRepository;
+import pl.lodz.zzpj.kanbanboard.repository.TasksRepository;
 import pl.lodz.zzpj.kanbanboard.service.evaluation.evaluators.EvaluatorsFactory;
 import pl.lodz.zzpj.kanbanboard.service.evaluation.evaluators.UserEvaluation;
 import pl.lodz.zzpj.kanbanboard.service.evaluation.evaluators.UsersEvaluator.Metric;
@@ -20,13 +22,17 @@ public class UsersEvaluationService {
 
     private final ProjectsRepository projectsRepository;
 
+    private final TasksRepository tasksRepository;
+
     @Autowired
     public UsersEvaluationService(
             EvaluatorsFactory evalFactory,
-            ProjectsRepository projectsRepository
+            ProjectsRepository projectsRepository,
+            TasksRepository tasksRepository
     ) {
         this.evalFactory = evalFactory;
         this.projectsRepository = projectsRepository;
+        this.tasksRepository = tasksRepository;
     }
 
     public List<UserEvaluation> evaluateProjectMembers(UUID projectUuid, Metric metric) throws BaseException {
@@ -39,7 +45,7 @@ public class UsersEvaluationService {
 
         return evaluator.evaluate(
                 project.getMembers(),
-                project.getTasks()
+                tasksRepository.findAllByStatusEquals(Status.DONE)
         );
     }
 }

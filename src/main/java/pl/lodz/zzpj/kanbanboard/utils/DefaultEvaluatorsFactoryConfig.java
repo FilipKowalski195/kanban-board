@@ -11,8 +11,16 @@ import java.util.Map;
 @Configuration
 public class DefaultEvaluatorsFactoryConfig {
 
-    private final Map<Difficulty, Double> difficultyCoefficients = Map.of();
-    private final Map<Difficulty, Long> difficultyTimeEstimations = Map.of();
+    private final Map<Difficulty, Double> difficultyCoefficients = Map.of(
+            Difficulty.LOW, 0.5,
+            Difficulty.MEDIUM, 1.0,
+            Difficulty.HIGH, 1.5
+    );
+    private final Map<Difficulty, Long> difficultyTimeEstimations = Map.of(
+            Difficulty.LOW, 1L,
+            Difficulty.MEDIUM, 3L,
+            Difficulty.HIGH, 5L
+    );
 
     @Bean
     public EvaluatorsFactory defaultEvaluatorsFactory(
