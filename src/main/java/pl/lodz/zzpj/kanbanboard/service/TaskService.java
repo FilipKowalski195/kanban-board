@@ -73,6 +73,12 @@ public class TaskService extends BaseService {
     public void changeStatus(UUID taskUuid, Status newStatus) throws BaseException {
         var task = getTaskByUuidOrThrow(taskUuid);
 
+        if (newStatus == Status.CANCELED) {
+            task.cancelTask(dateProvider.now());
+            catchingValidation(() -> tasksRepository.save(task));
+            return;
+        }
+
         if (!task.isAssigned()) {
             throw ConflictException.taskNotAssigned(task);
         }
@@ -84,8 +90,6 @@ public class TaskService extends BaseService {
         if (newStatus == Status.DONE) {
             assertReview(task);
             task.closeTask(dateProvider.now());
-        } else if (newStatus == Status.CANCELED) {
-            task.cancelTask(dateProvider.now());
         } else {
             task.setStatus(newStatus);
         }
