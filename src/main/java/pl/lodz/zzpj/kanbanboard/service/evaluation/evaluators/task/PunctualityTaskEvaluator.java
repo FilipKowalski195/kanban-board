@@ -14,6 +14,8 @@ public class PunctualityTaskEvaluator implements TaskEvaluator {
         var timespan = (double) ChronoUnit.DAYS.between(task.getCreatedAt(), task.getClosedAt());
         var estimation = (double) ChronoUnit.DAYS.between(task.getCreatedAt(), task.getDetails().getDeadLine());
 
-        return (estimation - timespan) / timespan;
+        var diff = estimation - timespan;
+
+        return diff / Math.max(estimation, 1);
     }
 }
