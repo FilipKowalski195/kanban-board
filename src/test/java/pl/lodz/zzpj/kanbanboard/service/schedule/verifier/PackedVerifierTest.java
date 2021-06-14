@@ -82,8 +82,13 @@ class PackedVerifierTest {
 
         assertThat(actual)
                 .extracting(ScheduleAlert::getTrigger)
-                .containsExactly(weekendList.get(0).getTrigger(), longWeekendList.get(0).getTrigger(), longPeriodList.get(0).getTrigger());
+                .containsExactly(
+                        weekendList.get(0).getTrigger(),
+                        longWeekendList.get(0).getTrigger(),
+                        longPeriodList.get(0).getTrigger()
+                );
     }
+
     @Test
     void verify_returnEmptySetOfSchedules() {
 

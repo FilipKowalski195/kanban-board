@@ -4,6 +4,7 @@ import pl.lodz.zzpj.kanbanboard.entity.Task;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 import pl.lodz.zzpj.kanbanboard.service.evaluation.evaluators.task.TaskEvaluator;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -27,6 +28,7 @@ public class SumBasedUsersEvaluator implements UsersEvaluator {
                 .entrySet()
                 .stream()
                 .map(this::evaluateTasks)
+                .sorted(Comparator.comparing(UserEvaluation::getScore).reversed())
                 .collect(Collectors.toList());
     }
 

@@ -13,16 +13,13 @@ public class DefaultEvaluatorsFactory implements EvaluatorsFactory {
 
     private final DateProvider dateProvider;
     private final Map<Difficulty, Double> difficultyCoefficients;
-    private final Map<Difficulty, Long> difficultyTimeEstimation;
 
     public DefaultEvaluatorsFactory(
             DateProvider dateProvider,
-            Map<Difficulty, Double> difficultyCoefficients,
-            Map<Difficulty, Long> difficultyTimeEstimation
+            Map<Difficulty, Double> difficultyCoefficients
     ) {
         this.dateProvider = dateProvider;
         this.difficultyCoefficients = difficultyCoefficients;
-        this.difficultyTimeEstimation = difficultyTimeEstimation;
     }
 
     @Override
@@ -36,7 +33,7 @@ public class DefaultEvaluatorsFactory implements EvaluatorsFactory {
                         .compose();
             case PUNCTUALITY:
                 return Composer
-                        .startWith(new PunctualityTaskEvaluator(difficultyTimeEstimation))
+                        .startWith(new PunctualityTaskEvaluator())
                         .injectInto(SumBasedUsersEvaluator::new)
                         .injectInto(MissingUserEvaluator::new)
                         .compose();

@@ -37,9 +37,6 @@ public class UserServiceTest {
     @Mock
     DateProvider dateProvider;
 
-    @Mock
-    PasswordEncoder passwordEncoder;
-
     UserService userService;
 
     final String defaultEmail = "user@email.com";
@@ -55,11 +52,11 @@ public class UserServiceTest {
     final String userNotExistEmail = "userNotExist@email.com";
 
     private void noMoreInteractions(){
-        verifyNoMoreInteractions(usersRepository, dateProvider, passwordEncoder);
+        verifyNoMoreInteractions(usersRepository, dateProvider);
     }
 
     private void prepareUserService(){
-        userService = new UserService(usersRepository, dateProvider, passwordEncoder);
+        userService = new UserService(usersRepository, dateProvider);
     }
 
     @Test
@@ -71,8 +68,8 @@ public class UserServiceTest {
 
         var users = userService.getAll();
 
-        assertEquals(users.size(), 1);
-        assertEquals(users.get(0), defaultUser);
+        assertEquals(1, users.size());
+        assertEquals(defaultUser, users.get(0));
 
         verify(usersRepository)
                 .findAll();
