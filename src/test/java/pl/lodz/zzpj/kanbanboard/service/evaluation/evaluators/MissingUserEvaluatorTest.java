@@ -99,7 +99,7 @@ class MissingUserEvaluatorTest {
     }
 
     @Test
-    void evaluate() {
+    void evaluate_AddsMissingMembers() {
 
         when(usersEvaluator.evaluate(any(), any())).thenReturn(List.of(
                 new UserEvaluation(users.get(0), 6.0),
@@ -112,9 +112,9 @@ class MissingUserEvaluatorTest {
 
         verify(usersEvaluator, Mockito.atMost(6)).evaluate(any(), any());
 
-        assertThat(actual.get(0)).extracting(UserEvaluation::getScore).isEqualTo(6.0);
-        assertThat(actual.get(1)).extracting(UserEvaluation::getScore).isEqualTo(10.0);
-        assertThat(actual.get(2)).extracting(UserEvaluation::getScore).isEqualTo(0.0);
+        assertThat(actual)
+                .extracting(UserEvaluation::getScore)
+                .containsExactly(10.0, 6.0, 0.0);
 
     }
 }

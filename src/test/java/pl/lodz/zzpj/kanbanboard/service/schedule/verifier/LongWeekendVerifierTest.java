@@ -42,9 +42,13 @@ class LongWeekendVerifierTest {
 
         var actual = verifier.verify(start, end);
 
-        assertThat(actual).extracting(ScheduleAlert::getType).contains(Type.STRICT_LONG_WEEKEND);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getType)
+                .contains(Type.STRICT_LONG_WEEKEND);
 
-        assertThat(actual).extracting(ScheduleAlert::getTriggerType).contains(Trigger.DAYS);
+        assertThat(actual)
+                .extracting(ScheduleAlert::getTriggerType)
+                .contains(Trigger.DAYS);
 
         assertThat(actual)
                 .extracting(ScheduleAlert::getTrigger)

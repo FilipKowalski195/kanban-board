@@ -30,15 +30,6 @@ import static org.mockito.Mockito.when;
 class SumBasedUsersEvaluatorTest {
 
     @Mock
-    DateProvider dateProvider;
-
-    Map<Difficulty, Double> coefficientMap = Map.of(
-            Difficulty.LOW, 1.0,
-            Difficulty.MEDIUM, 2.0,
-            Difficulty.HIGH, 3.0
-    );
-
-    @Mock
     TaskEvaluator evaluator;
 
     SumBasedUsersEvaluator sumBasedUsersEvaluator;
@@ -121,8 +112,7 @@ class SumBasedUsersEvaluatorTest {
 
         verify(evaluator, Mockito.atMost(6)).evaluate(any());
 
-        assertThat(actual.get(0)).extracting(UserEvaluation::getScore).isEqualTo(3.0);
-        assertThat(actual.get(1)).extracting(UserEvaluation::getScore).isEqualTo(6.0);
+        assertThat(actual).extracting(UserEvaluation::getScore).containsExactly(6.0, 3.0);
 
     }
 }

@@ -5,6 +5,7 @@ import pl.lodz.zzpj.kanbanboard.entity.Task;
 import pl.lodz.zzpj.kanbanboard.entity.User;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,7 +36,7 @@ public class MissingUserEvaluator implements UsersEvaluator {
 
         result.addAll(baseEval);
         result.addAll(missingMembers);
-
+        result.sort(Comparator.comparing(UserEvaluation::getScore).reversed());
         return result;
     }
 }

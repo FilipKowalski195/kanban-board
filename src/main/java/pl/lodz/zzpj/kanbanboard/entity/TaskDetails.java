@@ -1,7 +1,6 @@
 package pl.lodz.zzpj.kanbanboard.entity;
 
 import javax.persistence.*;
-import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
@@ -15,7 +14,6 @@ public class TaskDetails {
     @GeneratedValue
     private Long id;
 
-    // LOW ~1h, MEDIUM ~4h, HIGH ~8h
     public enum Difficulty {
         LOW, MEDIUM, HIGH
     }
@@ -27,7 +25,6 @@ public class TaskDetails {
     @Column
     private String description;
 
-    @FutureOrPresent
     @NotNull
     @Column(nullable = false)
     private Instant deadLine;
